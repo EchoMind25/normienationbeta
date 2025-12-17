@@ -150,7 +150,9 @@ export function Dashboard({
   useEffect(() => {
     const fetchChartData = async () => {
       if (timeRange === "live") {
-        setChartData(priceHistory);
+        // Sort data in ascending chronological order (oldest → newest)
+        const sortedData = [...priceHistory].sort((a, b) => a.timestamp - b.timestamp);
+        setChartData(sortedData);
         return;
       }
 
@@ -159,11 +161,14 @@ export function Dashboard({
         const response = await fetch(`/api/price-history?range=${timeRange}`);
         if (response.ok) {
           const data = await response.json();
-          setChartData(data);
+          // Ensure data is sorted chronologically (oldest → newest)
+          const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp);
+          setChartData(sortedData);
         }
       } catch (error) {
         console.error("[Chart] Error fetching historical data:", error);
-        setChartData(priceHistory);
+        const sortedData = [...priceHistory].sort((a, b) => a.timestamp - b.timestamp);
+        setChartData(sortedData);
       } finally {
         setIsLoadingChart(false);
       }

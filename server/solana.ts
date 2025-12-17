@@ -31,6 +31,37 @@ function getConnection(): Connection {
   return connection;
 }
 
+async function fetchHolderCount(): Promise<number> {
+  try {
+    const conn = getConnection();
+    const tokenMint = new PublicKey(TOKEN_ADDRESS);
+
+    // Get the largest token accounts (holder count approximation)
+    // Note: This is limited to top accounts for performance
+    const largestAccounts = await conn.getTokenLargestAccounts(tokenMint);
+
+    if (largestAccounts && largestAccounts.value) {
+      // Filter out zero-balance accounts
+      const activeHolders = largestAccounts.value.filter(
+        (account) => account.uiAmount && account.uiAmount > 0
+      );
+
+      // This gives us an approximation - actual holder count may be higher
+      // For more accurate data, would need to use Helius or similar API
+      const holderCount = activeHolders.length;
+
+      console.log(`[Solana] Estimated holder count: ${holderCount}+ (based on largest accounts)`);
+      return holderCount;
+    }
+
+    return 0;
+  } catch (error) {
+    console.error("[Solana] Error fetching holder count:", error);
+    // Return a reasonable fallback based on typical Solana token stats
+    return 0;
+  }
+}
+
 async function fetchBurnedTokens(): Promise<number> {
   // Return confirmed burn amount - 527M+ burned by dev
   // Solana RPC getTokenSupply doesn't accurately reflect pump.fun burn mechanisms
@@ -54,9 +85,10 @@ export async function fetchTokenMetrics(): Promise<TokenMetrics> {
   }
 
   try {
-    const [response, burnedTokens] = await Promise.all([
+    const [response, burnedTokens, holders] = await Promise.all([
       fetch(`${DEXSCREENER_API}/${TOKEN_ADDRESS}`),
       fetchBurnedTokens(),
+      fetchHolderCount(),
     ]);
 
     if (!response.ok) {
@@ -94,7 +126,7 @@ export async function fetchTokenMetrics(): Promise<TokenMetrics> {
         circulatingSupply,
         burnedTokens,
         lockedTokens: LOCKED_TOKENS,
-        holders: 0,
+        holders,
         lastUpdated: new Date().toISOString(),
       };
 

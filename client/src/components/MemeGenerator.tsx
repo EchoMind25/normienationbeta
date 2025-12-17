@@ -452,6 +452,9 @@ export function MemeGenerator() {
             return newMap;
           });
         };
+        img.onerror = () => {
+          console.error(`Failed to load sticker image: ${sticker.url}`);
+        };
         img.src = sticker.url;
       }
     });
@@ -468,6 +471,9 @@ export function MemeGenerator() {
             newMap.set(sticker.url, img);
             return newMap;
           });
+        };
+        img.onerror = () => {
+          console.error(`Failed to preload sticker image: ${sticker.url}`);
         };
         img.src = sticker.url;
       }

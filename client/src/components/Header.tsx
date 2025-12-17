@@ -70,12 +70,16 @@ export function Header({ metrics, isDark, onToggleTheme }: HeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center justify-between gap-4 px-4 lg:px-8">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Terminal className="h-6 w-6 text-primary" />
+          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img
+              src="/normie-icon.png"
+              alt="Normie Logo"
+              className="h-8 w-8 rounded-full object-cover"
+            />
             <span className="font-mono text-lg font-bold tracking-tight text-foreground">
               {NORMIE_TOKEN.symbol}
             </span>
-          </div>
+          </a>
           {metrics && (
             <Badge variant="outline" className="hidden sm:flex font-mono text-xs">
               {formatPrice(metrics.price)}
