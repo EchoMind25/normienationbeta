@@ -252,8 +252,11 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
     },
   };
 
-  const burnProgress = metrics
-    ? (metrics.burnedTokens / metrics.totalSupply) * 100
+  const totalRemoved = metrics
+    ? metrics.burnedTokens + metrics.lockedTokens
+    : 0;
+  const strangleholdProgress = metrics
+    ? (totalRemoved / metrics.totalSupply) * 100
     : 0;
 
   const supplyData = metrics
@@ -403,18 +406,24 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
                 Supply Stranglehold
               </h3>
               <p className="text-lg font-mono font-bold">
-                {burnProgress.toFixed(1)}% Removed
+                {strangleholdProgress.toFixed(1)}% Removed
               </p>
             </div>
-            <Badge variant="outline" className="font-mono text-destructive">
-              <Flame className="h-3 w-3 mr-1" />
-              {metrics ? formatNumber(metrics.burnedTokens) : "0"} BURNED
-            </Badge>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="font-mono text-destructive">
+                <Flame className="h-3 w-3 mr-1" />
+                {metrics ? formatNumber(metrics.burnedTokens) : "0"} BURNED
+              </Badge>
+              <Badge variant="outline" className="font-mono text-chart-3">
+                <Lock className="h-3 w-3 mr-1" />
+                {metrics ? formatNumber(metrics.lockedTokens) : "0"} LOCKED
+              </Badge>
+            </div>
           </div>
-          <Progress value={burnProgress} className="h-3" />
+          <Progress value={strangleholdProgress} className="h-3" />
           <div className="flex justify-between mt-2 text-xs font-mono text-muted-foreground">
             <span>0%</span>
-            <span>572M removed total</span>
+            <span>{metrics ? formatNumber(totalRemoved) : "0"} removed total</span>
             <span>100%</span>
           </div>
         </Card>

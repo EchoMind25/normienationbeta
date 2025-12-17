@@ -8,9 +8,12 @@ const TOKEN_ADDRESS = NORMIE_TOKEN.address;
 const DEV_WALLET = "FrSFwE2BxWADEyUWFXDMAeomzuB4r83ZvzdG9sevpump";
 const BURN_ADDRESS = "1nc1nerator11111111111111111111111111111111";
 
-// Per dev on pump.fun (Dec 4, 2024): "230,000,000 Locked and 31 million burned"
-let cachedBurnedTokens: number = 31000000;
-const LOCKED_TOKENS: number = 230000000;
+// Per dev (@NormieCEO) on X: OVER 527 million burned/locked total
+// Burned + Locked combined = 527M+ (shown as "Supply Stranglehold")
+const BURNED_TOKENS: number = 297000000;  // ~297M burned
+const LOCKED_TOKENS: number = 230000000;  // 230M locked
+// Total removed from circulation: 527M+
+let cachedBurnedTokens: number = BURNED_TOKENS;
 
 let connection: Connection | null = null;
 let priceHistory: PricePoint[] = [];
