@@ -56,8 +56,8 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 1 * 60 * 1000,
+  max: 300,
   message: { error: "Too many requests, try again later" },
   validate: { xForwardedForHeader: false },
 });

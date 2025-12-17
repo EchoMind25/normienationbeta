@@ -57,7 +57,7 @@ export function useWebSocket() {
     } catch (error) {
       console.error("[Polling] Price history fetch error:", error);
     }
-  }, [priceHistory.length]);
+  }, []);
 
   const fetchDevBuys = useCallback(async () => {
     try {
