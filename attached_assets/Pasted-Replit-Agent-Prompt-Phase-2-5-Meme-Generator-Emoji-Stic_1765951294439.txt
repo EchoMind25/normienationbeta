@@ -1,0 +1,1029 @@
+Replit Agent Prompt: Phase 2.5 - Meme Generator Emoji & Sticker Expansion
+Context
+You are enhancing the Meme Generator component in the Normie Nation Community Hub (https://normienation.replit.app/). This is a focused update to transform the sticker system into a comprehensive emoji-based creative toolkit with expanded options. This builds on the existing fabric.js canvas implementation.
+Primary Objective
+Replace the current limited sticker system with a robust emoji picker and expand creative options to include:
+
+Native emoji support (all Unicode emoji categories)
+Normie-themed custom stickers (Pepe, Wojak, 4chan classics)
+Crypto/Solana themed elements
+Expanded text styling options
+Enhanced background choices
+
+
+Technical Requirements
+Required Libraries
+bashnpm install emoji-picker-react
+npm install emoji-mart  # Alternative if first doesn't work well
+npm install fabric  # Already installed, confirm version ^5.3.0
+Emoji Picker Implementation
+Component Structure:
+javascript// Use emoji-picker-react for native emoji support
+import EmojiPicker from 'emoji-picker-react';
+
+// Features needed:
+// - Search functionality
+// - Category tabs (Smileys, People, Animals, Food, Activities, Travel, Objects, Symbols, Flags)
+// - Skin tone selector
+// - Recent emojis tracking (localStorage)
+// - Click to add to canvas at default size
+Emoji Rendering on Canvas:
+javascript// fabric.js text object for emoji rendering:
+const addEmojiToCanvas = (emoji, canvas) => {
+  const text = new fabric.Text(emoji, {
+    left: canvas.width / 2,
+    top: canvas.height / 2,
+    fontSize: 80, // Default size, user can scale
+    selectable: true,
+    hasControls: true,
+    hasBorders: true,
+    originX: 'center',
+    originY: 'center'
+  });
+  
+  canvas.add(text);
+  canvas.setActiveObject(text);
+  canvas.renderAll();
+};
+
+// Enable multi-select for copying/grouping
+canvas.selection = true;
+
+Sticker Categories & Assets
+Category 1: Normie/4chan Classics (20+ stickers)
+Required Stickers:
+javascriptconst normieStickers = [
+  // Pepe variations
+  { id: 'pepe-classic', name: 'Classic Pepe', url: 'https://i.imgur.com/[ID].png' },
+  { id: 'pepe-rare', name: 'Rare Pepe', url: '...' },
+  { id: 'pepe-smug', name: 'Smug Pepe', url: '...' },
+  { id: 'pepe-angry', name: 'Angry Pepe', url: '...' },
+  { id: 'pepe-cry', name: 'Crying Pepe', url: '...' },
+  { id: 'pepe-laugh', name: 'Laughing Pepe', url: '...' },
+  
+  // Wojak variations
+  { id: 'wojak-sad', name: 'Sad Wojak', url: '...' },
+  { id: 'wojak-happy', name: 'Happy Wojak', url: '...' },
+  { id: 'wojak-npc', name: 'NPC Wojak', url: '...' },
+  { id: 'wojak-doomer', name: 'Doomer', url: '...' },
+  { id: 'wojak-bloomer', name: 'Bloomer', url: '...' },
+  { id: 'wojak-zoomer', name: 'Zoomer', url: '...' },
+  { id: 'wojak-boomer', name: 'Boomer', url: '...' },
+  
+  // 4chan classics
+  { id: 'troll-face', name: 'Troll Face', url: '...' },
+  { id: 'rage-face', name: 'Rage Face', url: '...' },
+  { id: 'forever-alone', name: 'Forever Alone', url: '...' },
+  { id: 'yao-ming', name: 'Yao Ming Face', url: '...' },
+  { id: 'poker-face', name: 'Poker Face', url: '...' },
+  { id: 'me-gusta', name: 'Me Gusta', url: '...' },
+  { id: 'doge', name: 'Doge', url: '...' }
+];
+Asset Sourcing Instructions:
+
+Use KnowYourMeme.com to download canonical versions
+Use Tenor GIF API (free) for animated stickers: https://tenor.com/gifapi/documentation
+Fallback to public CDNs for meme templates
+Store locally in /public/stickers/ folder organized by category
+Optimize all images: max 512x512px, PNG with transparency, under 200KB each
+
+Category 2: Crypto/Solana Themed (15+ stickers)
+javascriptconst cryptoStickers = [
+  // Crypto symbols
+  { id: 'bitcoin', name: 'Bitcoin Logo', url: '...' },
+  { id: 'ethereum', name: 'Ethereum Logo', url: '...' },
+  { id: 'solana', name: 'Solana Logo', url: '...' },
+  
+  // Meme coins
+  { id: 'doge-coin', name: 'Dogecoin', url: '...' },
+  { id: 'shiba', name: 'Shiba Inu', url: '...' },
+  
+  // Crypto culture
+  { id: 'diamond-hands', name: '💎🙌 Diamond Hands', url: '...' },
+  { id: 'paper-hands', name: 'Paper Hands', url: '...' },
+  { id: 'moon', name: 'To The Moon 🚀', url: '...' },
+  { id: 'lambo', name: 'Lambo', url: '...' },
+  { id: 'rocket', name: 'Rocket', url: '...' },
+  { id: 'chart-up', name: 'Chart Up', url: '...' },
+  { id: 'chart-down', name: 'Chart Down', url: '...' },
+  { id: 'wojak-hodl', name: 'HODL Wojak', url: '...' },
+  { id: 'burn', name: 'Token Burn 🔥', url: '...' },
+  { id: 'whale', name: 'Whale 🐋', url: '...' }
+];
+Category 3: Normie Brand Assets (10+ custom)
+javascriptconst normieAssets = [
+  // Create custom Normie branding elements
+  { id: 'normie-logo', name: 'Normie Logo', url: '/stickers/brand/logo.png' },
+  { id: 'normie-text', name: 'Normie Text', url: '/stickers/brand/text.png' },
+  { id: 'normie-nation', name: 'Normie Nation Banner', url: '...' },
+  { id: 'supply-burn', name: 'Supply Burn Badge', url: '...' },
+  { id: 'locked', name: 'Locked Badge', url: '...' },
+  { id: 'verified', name: 'Verified Checkmark', url: '...' },
+  { id: '4chan-clover', name: '4chan Clover', url: '...' },
+  { id: 'based', name: 'BASED stamp', url: '...' },
+  { id: 'ngmi', name: 'NGMI stamp', url: '...' },
+  { id: 'wagmi', name: 'WAGMI stamp', url: '...' }
+];
+
+Enhanced Text Styling
+Font Options
+javascriptconst fontOptions = [
+  'Impact', // Classic meme font
+  'Arial Black',
+  'Comic Sans MS', // Ironic choice
+  'Courier New', // Monospace
+  'Georgia',
+  'Times New Roman',
+  'Verdana',
+  'Trebuchet MS'
+];
+
+// Add custom web fonts via Google Fonts:
+const customFonts = [
+  'Anton', // Bold display
+  'Bebas Neue', // Condensed
+  'Montserrat', // Modern
+  'Roboto Mono' // Code-style
+];
+
+// Import in HTML head:
+// <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Montserrat:wght@700&family=Roboto+Mono&display=swap" rel="stylesheet">
+Text Effects Panel
+javascript// Add these controls to text editing:
+const textControls = {
+  // Stroke/Outline
+  strokeWidth: { min: 0, max: 10, default: 2 },
+  strokeColor: { type: 'color-picker', default: '#000000' },
+  
+  // Shadow
+  shadowEnabled: { type: 'checkbox', default: false },
+  shadowColor: { type: 'color-picker', default: '#000000' },
+  shadowBlur: { min: 0, max: 20, default: 5 },
+  shadowOffsetX: { min: -20, max: 20, default: 3 },
+  shadowOffsetY: { min: -20, max: 20, default: 3 },
+  
+  // Text transform
+  uppercase: { type: 'button', action: text => text.toUpperCase() },
+  lowercase: { type: 'button', action: text => text.toLowerCase() },
+  
+  // Alignment
+  align: { options: ['left', 'center', 'right'], default: 'center' },
+  
+  // Text curvature (advanced)
+  curveText: { type: 'checkbox', default: false },
+  curveRadius: { min: -500, max: 500, default: 0 }
+};
+
+// Implement stroke on text:
+const addTextWithStroke = (canvas, text, options) => {
+  const fabricText = new fabric.Text(text, {
+    ...options,
+    stroke: options.strokeColor || '#000000',
+    strokeWidth: options.strokeWidth || 2,
+    fill: options.fill || '#FFFFFF',
+    shadow: options.shadowEnabled ? new fabric.Shadow({
+      color: options.shadowColor,
+      blur: options.shadowBlur,
+      offsetX: options.shadowOffsetX,
+      offsetY: options.shadowOffsetY
+    }) : null
+  });
+  canvas.add(fabricText);
+};
+
+Background Enhancements
+Expanded Background Options
+1. Solid Colors (30+ presets):
+javascriptconst colorPresets = [
+  // Classic
+  { name: 'White', hex: '#FFFFFF' },
+  { name: 'Black', hex: '#000000' },
+  { name: '4chan Green', hex: '#00FF00' },
+  
+  // Dark tones
+  { name: 'Dark Gray', hex: '#1a1a1a' },
+  { name: 'Charcoal', hex: '#2c2c2c' },
+  { name: 'Navy', hex: '#001f3f' },
+  
+  // Vibrant
+  { name: 'Electric Blue', hex: '#0074D9' },
+  { name: 'Neon Pink', hex: '#FF1493' },
+  { name: 'Cyber Purple', hex: '#9B59B6' },
+  { name: 'Matrix Green', hex: '#00FF41' },
+  { name: 'Sunset Orange', hex: '#FF4500' },
+  { name: 'Laser Red', hex: '#FF0000' },
+  
+  // Pastels
+  { name: 'Soft Pink', hex: '#FFB6C1' },
+  { name: 'Mint', hex: '#98FF98' },
+  { name: 'Lavender', hex: '#E6E6FA' },
+  { name: 'Peach', hex: '#FFDAB9' },
+  
+  // Gradients (implement as canvas gradient)
+  { name: 'Sunset', gradient: ['#FF512F', '#DD2476'] },
+  { name: 'Ocean', gradient: ['#2E3192', '#1BFFFF'] },
+  { name: 'Cyberpunk', gradient: ['#8E2DE2', '#4A00E0'] },
+  { name: 'Vaporwave', gradient: ['#FF6FD8', '#3813C2'] }
+];
+
+// Gradient implementation:
+const setGradientBackground = (canvas, colors) => {
+  const gradient = new fabric.Gradient({
+    type: 'linear',
+    coords: { x1: 0, y1: 0, x2: canvas.width, y2: canvas.height },
+    colorStops: [
+      { offset: 0, color: colors[0] },
+      { offset: 1, color: colors[1] }
+    ]
+  });
+  canvas.setBackgroundColor(gradient, canvas.renderAll.bind(canvas));
+};
+2. Pattern Backgrounds (10+ options):
+javascriptconst patternBackgrounds = [
+  { name: 'Checkerboard', pattern: 'checkerboard' },
+  { name: 'Diagonal Stripes', pattern: 'diagonal-stripes' },
+  { name: 'Polka Dots', pattern: 'polka-dots' },
+  { name: 'Grid', pattern: 'grid' },
+  { name: 'Stars', pattern: 'stars' },
+  { name: 'Binary Code', pattern: 'binary' }, // 01001110...
+  { name: 'Pepe Pattern', pattern: 'pepe-repeat' },
+  { name: 'Wojak Pattern', pattern: 'wojak-repeat' }
+];
+
+// SVG pattern generation:
+const createPatternBackground = (canvas, patternType) => {
+  const patternSVG = generatePatternSVG(patternType);
+  fabric.loadSVGFromString(patternSVG, (objects, options) => {
+    const pattern = new fabric.Pattern({
+      source: fabric.util.groupSVGElements(objects),
+      repeat: 'repeat'
+    });
+    canvas.setBackgroundColor(pattern, canvas.renderAll.bind(canvas));
+  });
+};
+3. Scenery Images (20+ categories):
+javascriptconst sceneryCategories = {
+  'Space': [
+    { name: 'Nebula', url: 'https://source.unsplash.com/1600x900/?nebula' },
+    { name: 'Galaxy', url: 'https://source.unsplash.com/1600x900/?galaxy' },
+    { name: 'Moon Surface', url: 'https://source.unsplash.com/1600x900/?moon' },
+    { name: 'Rocket Launch', url: '...' }
+  ],
+  'Cyberpunk': [
+    { name: 'Neon City', url: 'https://source.unsplash.com/1600x900/?cyberpunk,neon' },
+    { name: 'Tokyo Night', url: 'https://source.unsplash.com/1600x900/?tokyo,night' },
+    { name: 'Blade Runner', url: '...' }
+  ],
+  'Nature': [
+    { name: 'Forest', url: 'https://source.unsplash.com/1600x900/?forest' },
+    { name: 'Beach', url: 'https://source.unsplash.com/1600x900/?beach' },
+    { name: 'Mountains', url: 'https://source.unsplash.com/1600x900/?mountains' },
+    { name: 'Desert', url: 'https://source.unsplash.com/1600x900/?desert' }
+  ],
+  'Urban': [
+    { name: 'City Skyline', url: 'https://source.unsplash.com/1600x900/?cityscape' },
+    { name: 'Graffiti Wall', url: 'https://source.unsplash.com/1600x900/?graffiti' },
+    { name: 'Street Art', url: '...' }
+  ],
+  'Meme': [
+    { name: 'Green Screen', hex: '#00FF00' }, // Chroma key
+    { name: 'Blue Screen', hex: '#0000FF' },
+    { name: '4chan Board', url: '/backgrounds/4chan-board.png' },
+    { name: 'Discord Chat', url: '/backgrounds/discord-mockup.png' }
+  ],
+  'Abstract': [
+    { name: 'Geometric', url: 'https://source.unsplash.com/1600x900/?abstract,geometric' },
+    { name: 'Vaporwave', url: '...' },
+    { name: 'Glitch', url: '...' }
+  ]
+};
+
+// Use Unsplash Source API (free, no key required) for random images
+// Or download and host locally for faster loading
+```
+
+---
+
+## UI Layout Design
+
+### Meme Generator Interface Structure
+```
+┌─────────────────────────────────────────────────────────────┐
+│  MEME GENERATOR                                    [✕ Close] │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  ┌──────────┐  ┌───────────────────────────────┐           │
+│  │ TOOLBOX  │  │                                │           │
+│  │          │  │                                │           │
+│  │ 🎨 BG    │  │        CANVAS AREA             │           │
+│  │ 📝 Text  │  │        (fabric.js)             │           │
+│  │ 😀 Emoji │  │                                │           │
+│  │ 🖼️  Sticker│  │                                │           │
+│  │ 🎭 Filter │  │        500 x 400               │           │
+│  │ ⚙️  Edit  │  │                                │           │
+│  │          │  │                                │           │
+│  │ ⬆️  Upload│  │                                │           │
+│  │ 💾 Save  │  └───────────────────────────────┘           │
+│  │ 🔄 Clear │                                                │
+│  └──────────┘  [Undo] [Redo] [Delete Selected]             │
+│                                                               │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  DYNAMIC PANEL (changes based on tool selected)       │  │
+│  │                                                         │  │
+│  │  [Background options / Emoji picker / Text controls]   │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                               │
+│  [Export as PNG] [Mint as NFT] [Share to X] [Add to Gallery]│
+└─────────────────────────────────────────────────────────────┘
+Toolbox Implementation
+javascriptconst toolboxButtons = [
+  {
+    id: 'background',
+    icon: '🎨',
+    label: 'Background',
+    panel: 'BackgroundPanel', // Component to show
+    tooltip: 'Change canvas background'
+  },
+  {
+    id: 'text',
+    icon: '📝',
+    label: 'Text',
+    panel: 'TextPanel',
+    tooltip: 'Add and style text',
+    action: () => addTextToCanvas()
+  },
+  {
+    id: 'emoji',
+    icon: '😀',
+    label: 'Emoji',
+    panel: 'EmojiPanel',
+    tooltip: 'Add emoji to meme'
+  },
+  {
+    id: 'sticker',
+    icon: '🖼️',
+    label: 'Stickers',
+    panel: 'StickerPanel',
+    tooltip: 'Browse sticker library'
+  },
+  {
+    id: 'filter',
+    icon: '🎭',
+    label: 'Filters',
+    panel: 'FilterPanel',
+    tooltip: 'Apply image filters'
+  },
+  {
+    id: 'edit',
+    icon: '⚙️',
+    label: 'Edit',
+    panel: 'EditPanel',
+    tooltip: 'Edit selected object'
+  },
+  {
+    id: 'upload',
+    icon: '⬆️',
+    label: 'Upload',
+    action: () => triggerFileUpload(),
+    tooltip: 'Upload image from device'
+  },
+  {
+    id: 'save',
+    icon: '💾',
+    label: 'Save',
+    action: () => saveToLocalStorage(),
+    tooltip: 'Save progress'
+  },
+  {
+    id: 'clear',
+    icon: '🔄',
+    label: 'Clear',
+    action: () => clearCanvas(),
+    tooltip: 'Clear entire canvas'
+  }
+];
+Dynamic Panel Components
+Background Panel:
+jsx<div className="background-panel">
+  <Tabs>
+    <Tab label="Solid Colors">
+      <ColorGrid colors={colorPresets} onSelect={setBackgroundColor} />
+      <ColorPicker onChange={setBackgroundColor} />
+    </Tab>
+    <Tab label="Gradients">
+      <GradientGrid gradients={colorPresets.filter(p => p.gradient)} />
+    </Tab>
+    <Tab label="Patterns">
+      <PatternGrid patterns={patternBackgrounds} />
+    </Tab>
+    <Tab label="Scenery">
+      <CategoryDropdown categories={Object.keys(sceneryCategories)} />
+      <ImageGrid images={sceneryCategories[selectedCategory]} />
+    </Tab>
+  </Tabs>
+</div>
+Emoji Panel:
+jsx<div className="emoji-panel">
+  <EmojiPicker
+    onEmojiClick={(emojiObject) => addEmojiToCanvas(emojiObject.emoji)}
+    searchPlaceholder="Search emoji..."
+    theme="dark" // Match 4chan aesthetic
+    height={400}
+    width="100%"
+    previewConfig={{ showPreview: false }}
+  />
+  
+  <div className="size-controls">
+    <label>Emoji Size:</label>
+    <input 
+      type="range" 
+      min="20" 
+      max="200" 
+      defaultValue="80"
+      onChange={(e) => setDefaultEmojiSize(e.target.value)}
+    />
+    <span>{defaultEmojiSize}px</span>
+  </div>
+</div>
+Sticker Panel:
+jsx<div className="sticker-panel">
+  <Tabs>
+    <Tab label="Normie/4chan">
+      <StickerGrid 
+        stickers={normieStickers} 
+        onSelect={addStickerToCanvas}
+        columns={4}
+      />
+    </Tab>
+    <Tab label="Crypto">
+      <StickerGrid stickers={cryptoStickers} />
+    </Tab>
+    <Tab label="Brand">
+      <StickerGrid stickers={normieAssets} />
+    </Tab>
+  </Tabs>
+  
+  <div className="sticker-controls">
+    <label>Default Size:</label>
+    <input type="range" min="50" max="300" defaultValue="150" />
+  </div>
+</div>
+Text Panel:
+jsx<div className="text-panel">
+  <textarea 
+    placeholder="Enter meme text..." 
+    rows="3"
+    maxLength="200"
+  />
+  <button onClick={addTextToCanvas}>Add Text</button>
+  
+  <div className="text-styling">
+    <label>Font:</label>
+    <select onChange={(e) => setTextFont(e.target.value)}>
+      {fontOptions.map(font => (
+        <option value={font}>{font}</option>
+      ))}
+    </select>
+    
+    <label>Size:</label>
+    <input type="number" min="10" max="200" defaultValue="40" />
+    
+    <label>Color:</label>
+    <input type="color" defaultValue="#FFFFFF" />
+    
+    <div className="text-effects">
+      <label>
+        <input type="checkbox" /> Stroke
+      </label>
+      <input type="color" defaultValue="#000000" placeholder="Stroke color" />
+      <input type="range" min="0" max="10" defaultValue="2" />
+      
+      <label>
+        <input type="checkbox" /> Shadow
+      </label>
+      {/* Shadow controls */}
+    </div>
+    
+    <div className="text-transform">
+      <button onClick={() => transformText('uppercase')}>UPPERCASE</button>
+      <button onClick={() => transformText('lowercase')}>lowercase</button>
+    </div>
+    
+    <div className="text-align">
+      <button>⬅️ Left</button>
+      <button>↔️ Center</button>
+      <button>➡️ Right</button>
+    </div>
+  </div>
+</div>
+
+Canvas Interaction Enhancements
+Multi-Select and Grouping
+javascript// Enable multi-select with Shift+Click or drag selection
+canvas.on('selection:created', (e) => {
+  const selection = e.selected;
+  if (selection.length > 1) {
+    // Show group actions: align, distribute, group
+    showGroupControls();
+  }
+});
+
+// Group selected objects
+const groupSelected = () => {
+  const activeObjects = canvas.getActiveObjects();
+  if (activeObjects.length > 1) {
+    const group = new fabric.Group(activeObjects);
+    canvas.discardActiveObject();
+    activeObjects.forEach(obj => canvas.remove(obj));
+    canvas.add(group);
+    canvas.setActiveObject(group);
+    canvas.renderAll();
+  }
+};
+
+// Ungroup
+const ungroupSelected = () => {
+  const activeObject = canvas.getActiveObject();
+  if (activeObject && activeObject.type === 'group') {
+    activeObject.toActiveSelection();
+    canvas.renderAll();
+  }
+};
+Keyboard Shortcuts
+javascriptdocument.addEventListener('keydown', (e) => {
+  if (!canvas) return;
+  
+  const activeObject = canvas.getActiveObject();
+  
+  // Delete
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (activeObject) {
+      canvas.remove(activeObject);
+      canvas.renderAll();
+    }
+  }
+  
+  // Undo/Redo
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'z') {
+      e.preventDefault();
+      undo();
+    }
+    if (e.key === 'y') {
+      e.preventDefault();
+      redo();
+    }
+    // Copy
+    if (e.key === 'c') {
+      e.preventDefault();
+      copySelected();
+    }
+    // Paste
+    if (e.key === 'v') {
+      e.preventDefault();
+      paste();
+    }
+    // Select All
+    if (e.key === 'a') {
+      e.preventDefault();
+      canvas.discardActiveObject();
+      const selection = new fabric.ActiveSelection(canvas.getObjects(), {
+        canvas: canvas,
+      });
+      canvas.setActiveObject(selection);
+      canvas.renderAll();
+    }
+  }
+  
+  // Arrow keys to move selected object
+  if (activeObject && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    e.preventDefault();
+    const step = e.shiftKey ? 10 : 1; // Shift for larger steps
+    
+    switch(e.key) {
+      case 'ArrowUp':
+        activeObject.top -= step;
+        break;
+      case 'ArrowDown':
+        activeObject.top += step;
+        break;
+      case 'ArrowLeft':
+        activeObject.left -= step;
+        break;
+      case 'ArrowRight':
+        activeObject.left += step;
+        break;
+    }
+    
+    canvas.renderAll();
+  }
+});
+Undo/Redo System
+javascriptlet canvasHistory = [];
+let historyStep = -1;
+
+const saveCanvasState = () => {
+  // Limit history to last 20 states
+  if (historyStep < canvasHistory.length - 1) {
+    canvasHistory = canvasHistory.slice(0, historyStep + 1);
+  }
+  
+  const json = JSON.stringify(canvas.toJSON());
+  canvasHistory.push(json);
+  historyStep++;
+  
+  if (canvasHistory.length > 20) {
+    canvasHistory.shift();
+    historyStep--;
+  }
+};
+
+const undo = () => {
+  if (historyStep > 0) {
+    historyStep--;
+    const state = canvasHistory[historyStep];
+    canvas.loadFromJSON(state, () => {
+      canvas.renderAll();
+    });
+  }
+};
+
+const redo = () => {
+  if (historyStep < canvasHistory.length - 1) {
+    historyStep++;
+    const state = canvasHistory[historyStep];
+    canvas.loadFromJSON(state, () => {
+      canvas.renderAll();
+    });
+  }
+};
+
+// Save state after each modification
+canvas.on('object:added', saveCanvasState);
+canvas.on('object:modified', saveCanvasState);
+canvas.on('object:removed', saveCanvasState);
+
+Image Upload & Processing
+Local Image Upload
+javascriptconst handleImageUpload = (file) => {
+  // Validate file
+  const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+  if (!validTypes.includes(file.type)) {
+    alert('Please upload PNG, JPG, GIF, or WebP');
+    return;
+  }
+  
+  // Check size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('File too large. Max 5MB.');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    fabric.Image.fromURL(e.target.result, (img) => {
+      // Scale to fit canvas if too large
+      const maxWidth = canvas.width * 0.8;
+      const maxHeight = canvas.height * 0.8;
+      
+      if (img.width > maxWidth) {
+        img.scaleToWidth(maxWidth);
+      }
+      if (img.height > maxHeight) {
+        img.scaleToHeight(maxHeight);
+      }
+      
+      img.set({
+        left: canvas.width / 2,
+        top: canvas.height / 2,
+        originX: 'center',
+        originY: 'center'
+      });
+      
+      canvas.add(img);
+      canvas.setActiveObject(img);
+      canvas.renderAll();
+      saveCanvasState();
+    });
+  };
+  
+  reader.readAsDataURL(file);
+};
+
+// Drag and drop support
+canvas.wrapperEl.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+});
+
+canvas.wrapperEl.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    handleImageUpload(file);
+  }
+});
+
+Export Options
+Enhanced Export Functionality
+javascript// Export as PNG (high quality)
+const exportAsPNG = () => {
+  const dataURL = canvas.toDataURL({
+    format: 'png',
+    quality: 1.0,
+    multiplier: 2 // 2x resolution for better quality
+  });
+  
+  const link = document.createElement('a');
+  link.download = `normie-meme-${Date.now()}.png`;
+  link.href = dataURL;
+  link.click();
+};
+
+// Export as JPG (smaller file)
+const exportAsJPG = () => {
+  const dataURL = canvas.toDataURL({
+    format: 'jpeg',
+    quality: 0.9
+  });
+  
+  const link = document.createElement('a');
+  link.download = `normie-meme-${Date.now()}.jpg`;
+  link.href = dataURL;
+  link.click();
+};
+
+// Copy to clipboard (for quick sharing)
+const copyToClipboard = async () => {
+  const dataURL = canvas.toDataURL({ format: 'png' });
+  const blob = await (await fetch(dataURL)).blob();
+  
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+    showToast('Copied to clipboard!');
+  } catch (err) {
+    console.error('Failed to copy:', err);
+    showToast('Copy failed. Use download instead.');
+  }
+};
+
+// Share to X (Twitter)
+const shareToX = () => {
+  const text = encodeURIComponent('Check out my Normie meme! 🚀 #NormieNation #Solana');
+  // Note: Can't directly attach image via URL, user must upload manually
+  // Or use backend to temporarily host image
+  window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+};
+
+Performance Optimizations
+Canvas Rendering
+javascript// Optimize rendering for large canvases
+canvas.renderOnAddRemove = false; // Manual render control
+
+// Use object caching
+fabric.Object.prototype.objectCaching = true;
+
+// Limit simultaneous objects
+const MAX_OBJECTS = 50;
+canvas.on('object:added', () => {
+  if (canvas.getObjects().length > MAX_OBJECTS) {
+    alert('Maximum 50 objects on canvas. Remove some to add more.');
+    canvas.remove(canvas.item(canvas.getObjects().length - 1));
+  }
+});
+
+// Debounce resize events
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    // Adjust canvas size responsively
+    const container = canvas.wrapperEl.parentElement;
+    const newWidth = Math.min(container.clientWidth, 800);
+    const newHeight = (newWidth / 5) * 4; // Maintain aspect ratio
+    
+    canvas.setDimensions({ width: newWidth, height: newHeight });
+    canvas.renderAll();
+  }, 250);
+});
+Image Loading
+javascript// Lazy load sticker images
+const lazyLoadStickers = () => {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        img.src = img.dataset.src;
+        observer.unobserve(img);
+      }
+    });
+  });
+  
+  document.querySelectorAll('.sticker-thumbnail').forEach(img => {
+    observer.observe(img);
+  });
+};
+
+// Preload frequently used stickers
+const preloadStickers = (urls) => {
+  urls.forEach(url => {
+    const img = new Image();
+    img.src = url;
+  });
+};
+
+Mobile Responsiveness
+Touch Support
+javascript// Enable touch gestures on mobile
+if ('ontouchstart' in window) {
+  // Pinch to zoom
+  let initialDistance = 0;
+  
+  canvas.on('touch:gesture', (e) => {
+    if (e.e.touches && e.e.touches.length === 2) {
+      const point1 = { x: e.e.touches[0].clientX, y: e.e.touches[0].clientY };
+      const point2 = { x: e.e.touches[1].clientX, y: e.e.touches[1].clientY };
+      
+      const distance = Math.sqrt(
+        Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)
+      );
+      
+      if (initialDistance === 0) {
+        initialDistance = distance;
+      } else {
+        const scale = distance / initialDistance;
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          activeObject.scale(scale);
+          canvas.renderAll();
+        }
+      }
+    }
+  });
+  
+  canvas.on('touch:drag', () => {
+    initialDistance = 0;
+  });
+}
+
+// Adjust UI for mobile
+const isMobile = window.innerWidth < 768;
+
+if (isMobile) {
+  // Make toolbox collapsible
+  // Increase touch target sizes
+  document.querySelectorAll('button').forEach(btn => {
+    btn.style.minHeight = '44px';
+    btn.style.minWidth = '44px';
+  });
+  
+  // Simplify emoji picker
+  // Reduce canvas size
+  canvas.setDimensions({ width: window.innerWidth - 40, height: 300 });
+}
+
+Testing Checklist
+After implementation, verify:
+Emoji Functionality
+
+ Emoji picker opens and displays all categories
+ Search works correctly
+ Clicking emoji adds it to canvas at center
+ Emoji is resizable and movable
+ Recent emoji tracking works
+ Emoji renders clearly on export
+
+Sticker System
+
+ All sticker categories load
+ Thumbnails display properly (lazy loading)
+ Clicking sticker adds to canvas
+ Stickers maintain transparency
+ High-quality stickers (no pixelation)
+ 30+ unique stickers available
+
+Text Enhancements
+
+ All fonts selectable and apply correctly
+ Stroke/outline works
+ Shadow effect works
+ Text transform (uppercase/lowercase) works
+ Text alignment buttons work
+ Color picker changes text color
+
+Backgrounds
+
+ Color picker and presets work
+ Gradients render smoothly
+ Patterns repeat correctly
+ Scenery images load and fit canvas
+ All background modes switchable
+
+Canvas Interactions
+
+ Multi-select works (Shift+Click)
+ Group/ungroup functions
+ Keyboard shortcuts (Delete, Ctrl+Z, etc.)
+ Arrow keys move objects
+ Undo/Redo maintains state
+ Copy/paste works
+
+Export
+
+ PNG export high quality
+ JPG export works
+ Filename includes timestamp
+ Copy to clipboard works (modern browsers)
+ No console errors on export
+
+Performance
+
+ No lag with 20+ objects
+ Smooth rendering on drag
+ Canvas responsive on window resize
+ Mobile touch gestures work
+ Stickers lazy load
+
+Mobile
+
+ Canvas fits screen
+ Toolbox accessible
+ Touch controls work
+ Pinch to zoom works
+ Export works on mobile browsers
+
+
+Required Agent Actions
+After implementation, provide detailed report on:
+
+Sticker Assets:
+
+How many stickers actually sourced
+Where stored (local vs CDN)
+Any licensing concerns
+File size optimization performed
+
+
+Library Choices:
+
+Which emoji picker library used (emoji-picker-react vs emoji-mart)
+Why that choice
+Any compatibility issues
+
+
+Performance Metrics:
+
+Canvas rendering FPS with 30 objects
+Average export time
+Sticker loading time
+Memory usage
+
+
+Browser Compatibility:
+
+Tested browsers
+Any known issues
+Polyfills required
+
+
+Asset Preparation Needed:
+
+List of stickers Braxton needs to add manually
+Recommended sources for missing assets
+File naming convention for new uploads
+
+
+Mobile Testing:
+
+Touch gesture support level
+Any mobile-specific bugs
+Recommended viewport settings
+
+
+Integration Points:
+
+How meme gen connects to NFT minting (Phase 2)
+Export format for gallery uploads (Phase 3)
+Any API endpoints created
+
+
+
+
+Success Criteria
+This enhancement is complete when:
+
+Users can add any Unicode emoji with one click
+30+ high-quality stickers available across 3 categories
+30+ background options (colors, gradients, patterns, images)
+Advanced text styling with stroke and shadow
+Undo/redo system functional
+Keyboard shortcuts working
+Multi-select and grouping operational
+Export produces high-quality images
+Mobile responsive with touch support
+No performance degradation with typical usage
+
+
+Begin implementation with high autonomy. Prioritize user experience and creative freedom. Make the meme generator the best in class - surpassing tools like Imgflip, Kapwing, and Canva's meme features. Report detailed progress upon completion.
