@@ -1,14 +1,13 @@
 import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
 import { MemeGenerator } from "@/components/MemeGenerator";
-import { MerchShop } from "@/components/MerchShop";
 import { CommunityHub } from "@/components/CommunityHub";
 import { Footer } from "@/components/Footer";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useTheme } from "@/hooks/useTheme";
 
 export default function Home() {
-  const { metrics, priceHistory, isConnected, isLoading } = useWebSocket();
+  const { metrics, priceHistory, devBuys, isConnected, isLoading } = useWebSocket();
   const { isDark, toggleTheme } = useTheme();
 
   return (
@@ -23,13 +22,12 @@ export default function Home() {
         <Dashboard
           metrics={metrics}
           priceHistory={priceHistory}
+          devBuys={devBuys}
           isLoading={isLoading}
           isConnected={isConnected}
         />
         
         <MemeGenerator />
-        
-        <MerchShop />
         
         <CommunityHub />
       </main>

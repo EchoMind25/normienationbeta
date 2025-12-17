@@ -28,7 +28,7 @@ import {
   ArcElement,
 } from "chart.js";
 import { Line, Doughnut } from "react-chartjs-2";
-import type { TokenMetrics, PricePoint } from "@shared/schema";
+import type { TokenMetrics, PricePoint, DevBuy } from "@shared/schema";
 
 ChartJS.register(
   CategoryScale,
@@ -45,6 +45,7 @@ ChartJS.register(
 interface DashboardProps {
   metrics: TokenMetrics | null;
   priceHistory: PricePoint[];
+  devBuys: DevBuy[];
   isLoading: boolean;
   isConnected: boolean;
 }
@@ -120,7 +121,7 @@ function StatCard({ title, value, change, icon, color = "text-primary", isLoadin
   );
 }
 
-export function Dashboard({ metrics, priceHistory, isLoading, isConnected }: DashboardProps) {
+export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnected }: DashboardProps) {
   const formatPrice = (price: number) => {
     if (price < 0.001) {
       return `$${price.toFixed(8)}`;
@@ -141,6 +142,29 @@ export function Dashboard({ metrics, priceHistory, isLoading, isConnected }: Das
     return num.toFixed(0);
   };
 
+  const devBuyPoints = (() => {
+    const result: (number | null)[] = new Array(priceHistory.length).fill(null);
+    
+    devBuys.forEach((buy) => {
+      let closestIndex = -1;
+      let closestDiff = Infinity;
+      
+      priceHistory.forEach((p, index) => {
+        const diff = Math.abs(buy.timestamp - p.timestamp);
+        if (diff < closestDiff) {
+          closestDiff = diff;
+          closestIndex = index;
+        }
+      });
+      
+      if (closestIndex !== -1 && closestDiff < 30 * 60 * 1000) {
+        result[closestIndex] = buy.price;
+      }
+    });
+    
+    return result;
+  })();
+
   const priceChartData = {
     labels: priceHistory.map((p) => {
       const date = new Date(p.timestamp);
@@ -158,6 +182,16 @@ export function Dashboard({ metrics, priceHistory, isLoading, isConnected }: Das
         pointRadius: 0,
         pointHoverRadius: 4,
       },
+      {
+        label: "Dev Buys",
+        data: devBuyPoints,
+        borderColor: "transparent",
+        backgroundColor: "hsl(45 90% 55%)",
+        pointRadius: devBuyPoints.map((p) => (p !== null ? 8 : 0)),
+        pointHoverRadius: 10,
+        pointStyle: "triangle",
+        showLine: false,
+      },
     ],
   };
 
@@ -165,7 +199,15 @@ export function Dashboard({ metrics, priceHistory, isLoading, isConnected }: Das
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: devBuys.length > 0,
+        position: "top" as const,
+        labels: {
+          color: "hsl(120 3% 55%)",
+          font: { family: "JetBrains Mono, monospace", size: 10 },
+          usePointStyle: true,
+        },
+      },
       tooltip: {
         mode: "index" as const,
         intersect: false,

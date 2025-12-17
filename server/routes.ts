@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { fetchTokenMetrics, getMetrics, getPriceHistory, addPricePoint } from "./solana";
+import { fetchTokenMetrics, getMetrics, getPriceHistory, addPricePoint, fetchDevBuys, getDevBuys, getConnectionStatus } from "./solana";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -16,7 +16,17 @@ export async function registerRoutes(
     }
   };
   
+  const updateDevBuys = async () => {
+    try {
+      await fetchDevBuys();
+    } catch (error) {
+      console.error("[DevBuys] Update error:", error);
+    }
+  };
+  
   setInterval(updateMetrics, 5000);
+  setInterval(updateDevBuys, 60000);
+  updateDevBuys();
   
   app.get("/api/metrics", async (_req, res) => {
     try {
@@ -33,6 +43,24 @@ export async function registerRoutes(
       res.json(history);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch price history" });
+    }
+  });
+  
+  app.get("/api/dev-buys", (_req, res) => {
+    try {
+      const buys = getDevBuys();
+      res.json(buys);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch dev buys" });
+    }
+  });
+  
+  app.get("/api/status", (_req, res) => {
+    try {
+      const status = getConnectionStatus();
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get status" });
     }
   });
   

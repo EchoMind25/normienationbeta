@@ -30,22 +30,15 @@ export const pricePointSchema = z.object({
 
 export type PricePoint = z.infer<typeof pricePointSchema>;
 
-// Product for merch shop
-export const productSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string(),
-  priceUSD: z.number(),
-  priceSol: z.number(),
-  image: z.string(),
-  category: z.enum(["apparel", "accessories", "drinkware", "lifestyle"]),
-  inStock: z.boolean(),
+// Dev buy transaction for chart markers
+export const devBuySchema = z.object({
+  signature: z.string(),
+  timestamp: z.number(),
+  amount: z.number(),
+  price: z.number(),
 });
 
-export type Product = z.infer<typeof productSchema>;
-
-export const insertProductSchema = productSchema.omit({ id: true });
-export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type DevBuy = z.infer<typeof devBuySchema>;
 
 // Poll for community engagement
 export const pollSchema = z.object({
@@ -76,14 +69,6 @@ export const activityItemSchema = z.object({
 });
 
 export type ActivityItem = z.infer<typeof activityItemSchema>;
-
-// Cart item for shop
-export const cartItemSchema = z.object({
-  productId: z.string(),
-  quantity: z.number(),
-});
-
-export type CartItem = z.infer<typeof cartItemSchema>;
 
 // User schema (existing)
 export const users = pgTable("users", {

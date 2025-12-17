@@ -1,0 +1,95 @@
+Context
+You are updating the Normie Nation Community Hub (https://normienation.replit.app/) for the $NORMIE memecoin (Solana token: FrSFwE2BxWADEyUWFXDMAeomzuB4r83ZvzdG9sevpump). This is Phase 1 of a multi-phase rebuild converting the app into a comprehensive community center.
+Objectives for This Phase
+1. Remove Shop Feature
+
+Delete all shop-related components, routes, and UI elements
+Remove mock payment flows (Solana Pay, Stripe interfaces)
+Clean up any shop-related dependencies
+Preserve: Dashboard, Meme Generator, Polls, Community Links
+
+2. Integrate Live Solana Data
+Replace ALL mock data with live blockchain queries using:
+
+RPC Endpoint: https://solana-rpc.publicnode.com
+Token Address: FrSFwE2BxWADEyUWFXDMAeomzuB4r83ZvzdG9sevpump
+Library: @solana/web3.js (install if not present)
+
+3. Required Live Metrics
+Display these on the dashboard with 5-10 second WebSocket updates:
+
+Current Price (USD)
+Market Cap (USD)
+24h Volume (USD)
+Total Supply
+Circulating Supply
+Burned Tokens (precise count, currently ~572M)
+Locked Tokens (currently ~230M)
+Holder Count
+Liquidity Pool (SOL and USD values)
+
+4. Chart Enhancements
+
+Maintain existing Chart.js line graphs for price/volume
+CRITICAL: Add visual indicators (dots/markers) on the chart showing Dev buy transactions
+Query transaction history to identify and plot these buys with timestamps
+
+Technical Requirements
+Backend Integration:
+javascript// Use Solana Web3.js to query:
+// - Token account info for supply/burns
+// - getParsedAccountInfo for holder counts
+// - getSignaturesForAddress for transaction history (Dev buys)
+// - Integrate with pump.fun API if available for price/market cap
+WebSocket Setup:
+
+Implement Socket.io or native WebSockets for real-time updates
+Poll Solana RPC every 5-10 seconds
+Cache responses to avoid rate limiting
+
+Error Handling:
+
+Fallback to cached data if RPC fails
+Display connection status indicator
+Log any RPC errors to console with timestamps
+
+Security:
+
+Store RPC endpoint in environment variables (Replit Secrets)
+Validate all blockchain responses before rendering
+Rate limit client-side requests
+
+What to Keep
+
+Dark mode UI with green/black 4chan aesthetic
+Meme Generator (fabric.js canvas)
+Community Polls
+Telegram/X social links
+Current responsive layout
+
+Deliverables
+
+Working dashboard with live Solana data
+Removed shop code (no remnants)
+Chart with Dev buy indicators
+Console logs confirming data sources (for verification)
+
+Required Agent Actions
+After implementing, inform me of:
+
+Any missing API endpoints or data sources you couldn't access
+Specific Replit Secrets I need to configure (if any)
+Dependencies you added/removed (with versions)
+Any Solana RPC limitations encountered (rate limits, missing data)
+Testing steps I should perform to verify accuracy
+Estimated update frequency you achieved (actual vs. target 5-10s)
+Any breaking changes to existing features
+
+Constraints
+
+Maintain current PostgreSQL setup (no changes this phase)
+Do NOT add new features (streaming, auth, gallery) yet
+Preserve existing file structure where possible
+Ensure mobile responsiveness remains intact
+
+Begin implementation and report progress with specific technical details. Flag blockers immediately.
