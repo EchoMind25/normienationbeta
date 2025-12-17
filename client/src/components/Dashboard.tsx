@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -121,7 +122,45 @@ function StatCard({ title, value, change, icon, color = "text-primary", isLoadin
   );
 }
 
+const TIME_RANGES = [
+  { id: "live", label: "Live", description: "Real-time updates" },
+  { id: "5m", label: "5m", description: "Last 5 minutes" },
+  { id: "1h", label: "1h", description: "Last hour" },
+  { id: "6h", label: "6h", description: "Last 6 hours" },
+  { id: "24h", label: "24h", description: "Last 24 hours" },
+  { id: "7d", label: "7d", description: "Last 7 days" },
+];
+
 export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnected }: DashboardProps) {
+  const [timeRange, setTimeRange] = useState("1h");
+  const [chartData, setChartData] = useState<PricePoint[]>([]);
+  const [isLoadingChart, setIsLoadingChart] = useState(false);
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      if (timeRange === "live") {
+        setChartData(priceHistory);
+        return;
+      }
+      
+      setIsLoadingChart(true);
+      try {
+        const response = await fetch(`/api/price-history?range=${timeRange}`);
+        if (response.ok) {
+          const data = await response.json();
+          setChartData(data);
+        }
+      } catch (error) {
+        console.error("[Chart] Error fetching historical data:", error);
+        setChartData(priceHistory);
+      } finally {
+        setIsLoadingChart(false);
+      }
+    };
+    
+    fetchChartData();
+  }, [timeRange, priceHistory]);
+
   const formatPrice = (price: number) => {
     if (price < 0.00001) {
       return price.toFixed(10);
@@ -145,14 +184,24 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
     return num.toFixed(0);
   };
 
+  const formatChartLabel = (timestamp: number) => {
+    const date = new Date(timestamp);
+    if (timeRange === "7d") {
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    } else if (timeRange === "24h" || timeRange === "6h") {
+      return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+    }
+    return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  };
+
   const devBuyPoints = (() => {
-    const result: (number | null)[] = new Array(priceHistory.length).fill(null);
+    const result: (number | null)[] = new Array(chartData.length).fill(null);
     
     devBuys.forEach((buy) => {
       let closestIndex = -1;
       let closestDiff = Infinity;
       
-      priceHistory.forEach((p, index) => {
+      chartData.forEach((p, index) => {
         const diff = Math.abs(buy.timestamp - p.timestamp);
         if (diff < closestDiff) {
           closestDiff = diff;
@@ -160,7 +209,7 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
         }
       });
       
-      if (closestIndex !== -1 && closestDiff < 30 * 60 * 1000) {
+      if (closestIndex !== -1 && closestDiff < 60 * 60 * 1000) {
         result[closestIndex] = buy.price;
       }
     });
@@ -169,14 +218,11 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
   })();
 
   const priceChartData = {
-    labels: priceHistory.map((p) => {
-      const date = new Date(p.timestamp);
-      return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-    }),
+    labels: chartData.map((p) => formatChartLabel(p.timestamp)),
     datasets: [
       {
         label: "Price",
-        data: priceHistory.map((p) => p.price),
+        data: chartData.map((p) => p.price),
         borderColor: "hsl(142 72% 45%)",
         backgroundColor: "hsl(142 72% 45% / 0.1)",
         borderWidth: 2,
@@ -430,23 +476,36 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 p-4 lg:p-6">
-            <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
               <h3 className="text-sm font-mono uppercase tracking-wider text-muted-foreground">
                 Price Chart
               </h3>
-              {metrics && (
-                <div className="flex items-center gap-1 text-xs font-mono text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  {new Date(metrics.lastUpdated).toLocaleTimeString()}
-                </div>
-              )}
+              <div className="flex items-center gap-1 flex-wrap">
+                {TIME_RANGES.map((range) => (
+                  <Button
+                    key={range.id}
+                    variant={timeRange === range.id ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setTimeRange(range.id)}
+                    className="font-mono text-xs px-2"
+                    data-testid={`button-range-${range.id}`}
+                  >
+                    {range.label}
+                  </Button>
+                ))}
+              </div>
             </div>
             <div className="h-64 lg:h-80">
-              {priceHistory.length > 0 ? (
-                <Line data={priceChartData} options={priceChartOptions} />
-              ) : (
+              {isLoadingChart ? (
                 <div className="h-full flex items-center justify-center">
                   <Skeleton className="w-full h-full" />
+                </div>
+              ) : chartData.length > 0 ? (
+                <Line data={priceChartData} options={priceChartOptions} />
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground font-mono text-sm">
+                  <Clock className="h-4 w-4 mr-2" />
+                  Waiting for price data...
                 </div>
               )}
             </div>

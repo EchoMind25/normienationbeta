@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
-import { fetchTokenMetrics, getMetrics, getPriceHistory, addPricePoint, fetchDevBuys, getDevBuys, getConnectionStatus } from "./solana";
+import { fetchTokenMetrics, getMetrics, getPriceHistory, addPricePoint, fetchDevBuys, getDevBuys, getConnectionStatus, fetchHistoricalPrices } from "./solana";
 import authRoutes from "./authRoutes";
 
 const apiLimiter = rateLimit({
@@ -62,12 +62,19 @@ export async function registerRoutes(
     }
   });
   
-  app.get("/api/price-history", (_req, res) => {
+  app.get("/api/price-history", async (req, res) => {
     try {
       res.set("Cache-Control", "no-store, no-cache, must-revalidate");
       res.set("Pragma", "no-cache");
-      const history = getPriceHistory();
-      res.json(history);
+      const timeRange = (req.query.range as string) || "live";
+      
+      if (timeRange === "live") {
+        const history = getPriceHistory();
+        res.json(history);
+      } else {
+        const history = await fetchHistoricalPrices(timeRange);
+        res.json(history);
+      }
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch price history" });
     }
