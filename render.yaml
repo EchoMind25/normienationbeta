@@ -9,7 +9,7 @@ services:
     name: normie-nation
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm run build && npm run db:push
     startCommand: npm run start
     envVars:
       - key: NODE_ENV
@@ -18,8 +18,12 @@ services:
         fromDatabase:
           name: normie-db
           property: connectionString
-      - key: SESSION_SECRET
+      - key: JWT_SECRET
         generateValue: true
       - key: PORT
         value: 10000
+      - key: APP_URL
+        value: https://tryechomind.net
+      - key: SENDGRID_FROM_EMAIL
+        value: support@tryechomind.net
     healthCheckPath: /api/health

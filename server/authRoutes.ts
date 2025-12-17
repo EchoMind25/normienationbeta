@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { body, validationResult } from "express-validator";
 import sgMail from "@sendgrid/mail";
+import { generatePasswordResetEmail } from "./emails/passwordResetEmail";
 import { storage } from "./storage";
 import {
   createJWT,
@@ -335,23 +336,14 @@ router.post(
         expiresAt,
       });
 
-      if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL) {
-        const resetLink = `${process.env.APP_URL || "https://normienation.replit.app"}/reset-password?token=${token}`;
+      if (process.env.SENDGRID_API_KEY) {
+        const resetLink = `${process.env.APP_URL || "https://tryechomind.net"}/reset-password?token=${token}`;
 
         await sgMail.send({
           to: email,
-          from: process.env.SENDGRID_FROM_EMAIL,
-          subject: "Normie Nation Password Reset",
-          html: `
-            <html>
-            <body style="background: #000; color: #00ff00; font-family: monospace; padding: 20px;">
-              <h2>Normie Nation Password Reset</h2>
-              <p>Click below to reset your password (expires in 1 hour):</p>
-              <a href="${resetLink}" style="color: #00ff00; font-size: 16px;">Reset Password</a>
-              <p style="margin-top: 20px;">If you didn't request this, ignore this email.</p>
-            </body>
-            </html>
-          `,
+          from: process.env.SENDGRID_FROM_EMAIL || "support@tryechomind.net",
+          subject: "Normie Nation - Password Reset Request",
+          html: generatePasswordResetEmail(resetLink),
         });
       }
     } catch (error) {
