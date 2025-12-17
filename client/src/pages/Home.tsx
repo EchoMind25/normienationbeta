@@ -2,6 +2,7 @@ import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
 import { MemeGenerator } from "@/components/MemeGenerator";
 import { CommunityHub } from "@/components/CommunityHub";
+import { ArtGallery } from "@/components/ArtGallery";
 import { Footer } from "@/components/Footer";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useTheme } from "@/hooks/useTheme";
@@ -28,6 +29,10 @@ export default function Home() {
         />
         
         <MemeGenerator />
+        
+        <section className="max-w-7xl mx-auto px-4 py-8">
+          <ArtGallery />
+        </section>
         
         <CommunityHub />
       </main>

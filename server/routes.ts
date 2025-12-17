@@ -392,5 +392,180 @@ export async function registerRoutes(
     }
   });
 
+  // =====================================================
+  // Art Gallery Routes
+  // =====================================================
+
+  app.get("/api/gallery", async (req, res) => {
+    try {
+      const featured = req.query.featured === "true";
+      const items = featured 
+        ? await storage.getFeaturedGalleryItems()
+        : await storage.getApprovedGalleryItems(50);
+      res.json(items);
+    } catch (error) {
+      console.error("[Gallery] Error fetching gallery:", error);
+      res.status(500).json({ error: "Failed to fetch gallery" });
+    }
+  });
+
+  app.get("/api/gallery/:id", async (req, res) => {
+    try {
+      const item = await storage.getGalleryItem(req.params.id);
+      if (!item) {
+        return res.status(404).json({ error: "Gallery item not found" });
+      }
+      await storage.incrementGalleryViews(req.params.id);
+      res.json(item);
+    } catch (error) {
+      console.error("[Gallery] Error fetching item:", error);
+      res.status(500).json({ error: "Failed to fetch gallery item" });
+    }
+  });
+
+  app.post("/api/gallery", async (req, res) => {
+    try {
+      const { title, description, imageUrl, tags, creatorName, creatorId } = req.body;
+      
+      if (!title || !imageUrl) {
+        return res.status(400).json({ error: "Title and image URL are required" });
+      }
+      
+      const item = await storage.createGalleryItem({
+        title,
+        description,
+        imageUrl,
+        tags: tags || [],
+        creatorName,
+        creatorId,
+        status: "pending",
+      });
+      
+      res.json(item);
+    } catch (error) {
+      console.error("[Gallery] Error creating item:", error);
+      res.status(500).json({ error: "Failed to create gallery item" });
+    }
+  });
+
+  app.post("/api/gallery/:id/vote", async (req, res) => {
+    try {
+      const { voteType, visitorId } = req.body;
+      
+      if (!voteType || !visitorId) {
+        return res.status(400).json({ error: "Vote type and visitor ID are required" });
+      }
+      
+      if (voteType !== "up" && voteType !== "down") {
+        return res.status(400).json({ error: "Vote type must be 'up' or 'down'" });
+      }
+      
+      await storage.voteGalleryItem(req.params.id, visitorId, voteType);
+      const item = await storage.getGalleryItem(req.params.id);
+      res.json(item);
+    } catch (error) {
+      console.error("[Gallery] Error voting:", error);
+      res.status(500).json({ error: "Failed to vote" });
+    }
+  });
+
+  app.get("/api/gallery/:id/voted", async (req, res) => {
+    try {
+      const visitorId = req.query.visitorId as string;
+      if (!visitorId) {
+        return res.status(400).json({ error: "Visitor ID is required" });
+      }
+      const vote = await storage.hasGalleryVoted(req.params.id, visitorId);
+      res.json({ voted: !!vote, voteType: vote?.voteType });
+    } catch (error) {
+      console.error("[Gallery] Error checking vote:", error);
+      res.status(500).json({ error: "Failed to check vote status" });
+    }
+  });
+
+  app.get("/api/gallery/:id/comments", async (req, res) => {
+    try {
+      const comments = await storage.getGalleryComments(req.params.id);
+      res.json(comments);
+    } catch (error) {
+      console.error("[Gallery] Error fetching comments:", error);
+      res.status(500).json({ error: "Failed to fetch comments" });
+    }
+  });
+
+  app.post("/api/gallery/:id/comments", async (req, res) => {
+    try {
+      const { content, visitorName, userId } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ error: "Comment content is required" });
+      }
+      
+      const comment = await storage.createGalleryComment({
+        galleryItemId: req.params.id,
+        content,
+        visitorName: visitorName || "Anonymous",
+        userId,
+      });
+      
+      res.json(comment);
+    } catch (error) {
+      console.error("[Gallery] Error creating comment:", error);
+      res.status(500).json({ error: "Failed to create comment" });
+    }
+  });
+
+  // Admin Gallery Routes
+  app.get("/api/admin/gallery/pending", requireAdmin, async (_req, res) => {
+    try {
+      const items = await storage.getPendingGalleryItems();
+      res.json(items);
+    } catch (error) {
+      console.error("[Admin] Error fetching pending gallery:", error);
+      res.status(500).json({ error: "Failed to fetch pending items" });
+    }
+  });
+
+  app.post("/api/admin/gallery/:id/approve", requireAdmin, async (req, res) => {
+    try {
+      await storage.approveGalleryItem(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("[Admin] Error approving gallery item:", error);
+      res.status(500).json({ error: "Failed to approve item" });
+    }
+  });
+
+  app.post("/api/admin/gallery/:id/reject", requireAdmin, async (req, res) => {
+    try {
+      await storage.rejectGalleryItem(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("[Admin] Error rejecting gallery item:", error);
+      res.status(500).json({ error: "Failed to reject item" });
+    }
+  });
+
+  app.post("/api/admin/gallery/:id/feature", requireAdmin, async (req, res) => {
+    try {
+      const { featured } = req.body;
+      await storage.featureGalleryItem(req.params.id, featured);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("[Admin] Error featuring gallery item:", error);
+      res.status(500).json({ error: "Failed to feature item" });
+    }
+  });
+
+  app.delete("/api/admin/gallery/comments/:id", requireAdmin, async (req, res) => {
+    try {
+      await storage.deleteGalleryComment(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("[Admin] Error deleting comment:", error);
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  });
+
   return httpServer;
 }

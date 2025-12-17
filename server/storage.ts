@@ -15,6 +15,9 @@ import {
   pollOptions,
   pollVotes,
   activityItems,
+  galleryItems,
+  galleryVotes,
+  galleryComments,
   type User,
   type InsertUser,
   type Session,
@@ -43,6 +46,12 @@ import {
   type InsertPollVote,
   type ActivityItemDb,
   type InsertActivityItemDb,
+  type GalleryItem,
+  type InsertGalleryItem,
+  type GalleryVote,
+  type InsertGalleryVote,
+  type GalleryComment,
+  type InsertGalleryComment,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -112,6 +121,23 @@ export interface IStorage {
   // Activity Feed
   getRecentActivity(limit?: number): Promise<ActivityItemDb[]>;
   createActivityItem(item: InsertActivityItemDb): Promise<ActivityItemDb>;
+  
+  // Gallery
+  getApprovedGalleryItems(limit?: number): Promise<GalleryItem[]>;
+  getPendingGalleryItems(): Promise<GalleryItem[]>;
+  getFeaturedGalleryItems(): Promise<GalleryItem[]>;
+  getGalleryItem(id: string): Promise<GalleryItem | undefined>;
+  createGalleryItem(item: InsertGalleryItem): Promise<GalleryItem>;
+  updateGalleryItem(id: string, data: Partial<InsertGalleryItem>): Promise<GalleryItem | undefined>;
+  approveGalleryItem(id: string): Promise<void>;
+  rejectGalleryItem(id: string): Promise<void>;
+  featureGalleryItem(id: string, featured: boolean): Promise<void>;
+  hasGalleryVoted(itemId: string, visitorId: string): Promise<GalleryVote | undefined>;
+  voteGalleryItem(itemId: string, visitorId: string, voteType: "up" | "down"): Promise<void>;
+  incrementGalleryViews(id: string): Promise<void>;
+  getGalleryComments(itemId: string): Promise<GalleryComment[]>;
+  createGalleryComment(comment: InsertGalleryComment): Promise<GalleryComment>;
+  deleteGalleryComment(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -405,6 +431,116 @@ export class DatabaseStorage implements IStorage {
   async createActivityItem(item: InsertActivityItemDb): Promise<ActivityItemDb> {
     const [created] = await db.insert(activityItems).values(item).returning();
     return created;
+  }
+
+  // Gallery
+  async getApprovedGalleryItems(limit: number = 50): Promise<GalleryItem[]> {
+    return db
+      .select()
+      .from(galleryItems)
+      .where(eq(galleryItems.status, "approved"))
+      .orderBy(desc(galleryItems.createdAt))
+      .limit(limit);
+  }
+
+  async getPendingGalleryItems(): Promise<GalleryItem[]> {
+    return db
+      .select()
+      .from(galleryItems)
+      .where(eq(galleryItems.status, "pending"))
+      .orderBy(desc(galleryItems.createdAt));
+  }
+
+  async getFeaturedGalleryItems(): Promise<GalleryItem[]> {
+    return db
+      .select()
+      .from(galleryItems)
+      .where(and(eq(galleryItems.status, "approved"), eq(galleryItems.featured, true)))
+      .orderBy(desc(galleryItems.createdAt));
+  }
+
+  async getGalleryItem(id: string): Promise<GalleryItem | undefined> {
+    const [item] = await db.select().from(galleryItems).where(eq(galleryItems.id, id));
+    return item;
+  }
+
+  async createGalleryItem(item: InsertGalleryItem): Promise<GalleryItem> {
+    const [created] = await db.insert(galleryItems).values(item).returning();
+    return created;
+  }
+
+  async updateGalleryItem(id: string, data: Partial<InsertGalleryItem>): Promise<GalleryItem | undefined> {
+    const [updated] = await db
+      .update(galleryItems)
+      .set(data)
+      .where(eq(galleryItems.id, id))
+      .returning();
+    return updated;
+  }
+
+  async approveGalleryItem(id: string): Promise<void> {
+    await db.update(galleryItems).set({ status: "approved" }).where(eq(galleryItems.id, id));
+  }
+
+  async rejectGalleryItem(id: string): Promise<void> {
+    await db.update(galleryItems).set({ status: "rejected" }).where(eq(galleryItems.id, id));
+  }
+
+  async featureGalleryItem(id: string, featured: boolean): Promise<void> {
+    await db.update(galleryItems).set({ featured }).where(eq(galleryItems.id, id));
+  }
+
+  async hasGalleryVoted(itemId: string, visitorId: string): Promise<GalleryVote | undefined> {
+    const [vote] = await db
+      .select()
+      .from(galleryVotes)
+      .where(and(eq(galleryVotes.galleryItemId, itemId), eq(galleryVotes.visitorId, visitorId)));
+    return vote;
+  }
+
+  async voteGalleryItem(itemId: string, visitorId: string, voteType: "up" | "down"): Promise<void> {
+    const existingVote = await this.hasGalleryVoted(itemId, visitorId);
+    
+    if (existingVote) {
+      if (existingVote.voteType === voteType) {
+        return;
+      }
+      await db.delete(galleryVotes).where(eq(galleryVotes.id, existingVote.id));
+      if (existingVote.voteType === "up") {
+        await db.update(galleryItems).set({ upvotes: sql`${galleryItems.upvotes} - 1` }).where(eq(galleryItems.id, itemId));
+      } else {
+        await db.update(galleryItems).set({ downvotes: sql`${galleryItems.downvotes} - 1` }).where(eq(galleryItems.id, itemId));
+      }
+    }
+    
+    await db.insert(galleryVotes).values({ galleryItemId: itemId, visitorId, voteType });
+    
+    if (voteType === "up") {
+      await db.update(galleryItems).set({ upvotes: sql`${galleryItems.upvotes} + 1` }).where(eq(galleryItems.id, itemId));
+    } else {
+      await db.update(galleryItems).set({ downvotes: sql`${galleryItems.downvotes} + 1` }).where(eq(galleryItems.id, itemId));
+    }
+  }
+
+  async incrementGalleryViews(id: string): Promise<void> {
+    await db.update(galleryItems).set({ views: sql`${galleryItems.views} + 1` }).where(eq(galleryItems.id, id));
+  }
+
+  async getGalleryComments(itemId: string): Promise<GalleryComment[]> {
+    return db
+      .select()
+      .from(galleryComments)
+      .where(and(eq(galleryComments.galleryItemId, itemId), eq(galleryComments.isDeleted, false)))
+      .orderBy(desc(galleryComments.createdAt));
+  }
+
+  async createGalleryComment(comment: InsertGalleryComment): Promise<GalleryComment> {
+    const [created] = await db.insert(galleryComments).values(comment).returning();
+    return created;
+  }
+
+  async deleteGalleryComment(id: string): Promise<void> {
+    await db.update(galleryComments).set({ isDeleted: true }).where(eq(galleryComments.id, id));
   }
 }
 

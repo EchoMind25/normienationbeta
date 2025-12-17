@@ -376,6 +376,80 @@ export type InsertActivityItemDb = z.infer<typeof insertActivityItemDbSchema>;
 export type ActivityItemDb = typeof activityItems.$inferSelect;
 
 // =====================================================
+// Art Gallery Tables
+// =====================================================
+
+export const galleryItems = pgTable("gallery_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: varchar("title", { length: 100 }).notNull(),
+  description: text("description"),
+  imageUrl: text("image_url").notNull(),
+  creatorId: uuid("creator_id").references(() => users.id),
+  creatorName: varchar("creator_name", { length: 100 }),
+  tags: text("tags").array(),
+  status: varchar("status", { length: 20 }).default("pending"),
+  upvotes: integer("upvotes").default(0),
+  downvotes: integer("downvotes").default(0),
+  views: integer("views").default(0),
+  featured: boolean("featured").default(false),
+  mintedAsNft: boolean("minted_as_nft").default(false),
+  nftId: uuid("nft_id").references(() => nfts.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_gallery_status").on(table.status),
+  index("idx_gallery_featured").on(table.featured),
+  index("idx_gallery_creator").on(table.creatorId),
+]);
+
+export const insertGalleryItemSchema = createInsertSchema(galleryItems).omit({ 
+  id: true, 
+  createdAt: true,
+  upvotes: true,
+  downvotes: true,
+  views: true,
+});
+export type InsertGalleryItem = z.infer<typeof insertGalleryItemSchema>;
+export type GalleryItem = typeof galleryItems.$inferSelect;
+
+export const galleryVotes = pgTable("gallery_votes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  galleryItemId: uuid("gallery_item_id").references(() => galleryItems.id, { onDelete: "cascade" }).notNull(),
+  visitorId: varchar("visitor_id", { length: 100 }).notNull(),
+  voteType: varchar("vote_type", { length: 10 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_gallery_votes_item").on(table.galleryItemId),
+  index("idx_gallery_votes_visitor").on(table.visitorId),
+]);
+
+export const insertGalleryVoteSchema = createInsertSchema(galleryVotes).omit({ 
+  id: true, 
+  createdAt: true,
+});
+export type InsertGalleryVote = z.infer<typeof insertGalleryVoteSchema>;
+export type GalleryVote = typeof galleryVotes.$inferSelect;
+
+export const galleryComments = pgTable("gallery_comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  galleryItemId: uuid("gallery_item_id").references(() => galleryItems.id, { onDelete: "cascade" }).notNull(),
+  userId: uuid("user_id").references(() => users.id),
+  visitorName: varchar("visitor_name", { length: 50 }),
+  content: text("content").notNull(),
+  isDeleted: boolean("is_deleted").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_gallery_comments_item").on(table.galleryItemId),
+]);
+
+export const insertGalleryCommentSchema = createInsertSchema(galleryComments).omit({ 
+  id: true, 
+  createdAt: true,
+  isDeleted: true,
+});
+export type InsertGalleryComment = z.infer<typeof insertGalleryCommentSchema>;
+export type GalleryComment = typeof galleryComments.$inferSelect;
+
+// =====================================================
 // Normie token constants
 // =====================================================
 
