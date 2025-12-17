@@ -79,7 +79,12 @@ export async function registerRoutes(
   app.use("/api/auth", authLimiter, authRoutes);
   
   app.use("/api", apiLimiter);
-  
+
+  // Health check endpoint for Render
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   const updateMetrics = async () => {
     try {
       const metrics = await fetchTokenMetrics();
