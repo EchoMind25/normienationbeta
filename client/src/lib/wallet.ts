@@ -7,7 +7,8 @@ declare global {
       isPhantom?: boolean;
       connect: () => Promise<{ publicKey: PublicKey }>;
       disconnect: () => Promise<void>;
-      signMessage: (message: Uint8Array) => Promise<{ signature: Uint8Array }>;
+      signMessage: (message: Uint8Array, display?: string) => Promise<{ signature: Uint8Array }>;
+      request?: (args: { method: string; params: any }) => Promise<any>;
       publicKey?: PublicKey;
       isConnected?: boolean;
     };
@@ -15,7 +16,7 @@ declare global {
       isSolflare?: boolean;
       connect: () => Promise<{ publicKey: PublicKey }>;
       disconnect: () => Promise<void>;
-      signMessage: (message: Uint8Array) => Promise<{ signature: Uint8Array }>;
+      signMessage: (message: Uint8Array, display?: string) => Promise<{ signature: Uint8Array }>;
       publicKey?: PublicKey;
       isConnected?: boolean;
     };
@@ -78,18 +79,35 @@ export async function signMessage(
   message: string
 ): Promise<{ signature: string; publicKey: string } | null> {
   const wallet = getWallet(provider);
-  if (!wallet || !wallet.publicKey) return null;
+  if (!wallet || !wallet.publicKey) {
+    console.error("Sign message error: wallet not connected or no publicKey");
+    return null;
+  }
 
   try {
     const messageBytes = new TextEncoder().encode(message);
-    const { signature } = await wallet.signMessage(messageBytes);
+    let signature: Uint8Array;
+    
+    if (provider === "phantom" && wallet.request) {
+      const response = await wallet.request({
+        method: "signMessage",
+        params: {
+          message: messageBytes,
+          display: "utf8",
+        },
+      });
+      signature = response.signature;
+    } else {
+      const result = await wallet.signMessage(messageBytes, "utf8");
+      signature = result.signature;
+    }
     
     return {
       signature: Buffer.from(signature).toString("base64"),
       publicKey: Buffer.from(wallet.publicKey.toBytes()).toString("base64"),
     };
-  } catch (error) {
-    console.error("Sign message error:", error);
+  } catch (error: any) {
+    console.error("Sign message error:", error?.message || error);
     return null;
   }
 }

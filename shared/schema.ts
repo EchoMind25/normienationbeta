@@ -150,6 +150,24 @@ export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTo
 export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 
+// Manual dev buys table for admin-added chart markers
+export const manualDevBuys = pgTable("manual_dev_buys", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  timestamp: timestamp("timestamp").notNull(),
+  amount: decimal("amount", { precision: 20, scale: 6 }).notNull(),
+  price: decimal("price", { precision: 20, scale: 10 }).notNull(),
+  label: varchar("label", { length: 100 }),
+  addedBy: uuid("added_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertManualDevBuySchema = createInsertSchema(manualDevBuys).omit({ 
+  id: true, 
+  createdAt: true,
+});
+export type InsertManualDevBuy = z.infer<typeof insertManualDevBuySchema>;
+export type ManualDevBuy = typeof manualDevBuys.$inferSelect;
+
 // =====================================================
 // PHASE 2: NFT Tables
 // =====================================================
