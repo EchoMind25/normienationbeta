@@ -6,6 +6,9 @@ const RPC_ENDPOINT = "https://solana-rpc.publicnode.com";
 const DEXSCREENER_API = "https://api.dexscreener.com/latest/dex/tokens";
 const TOKEN_ADDRESS = NORMIE_TOKEN.address;
 const DEV_WALLET = "FrSFwE2BxWADEyUWFXDMAeomzuB4r83ZvzdG9sevpump";
+const BURN_ADDRESS = "1nc1nerator11111111111111111111111111111111";
+
+let cachedBurnedTokens: number = 572000000;
 
 let connection: Connection | null = null;
 let priceHistory: PricePoint[] = [];
@@ -21,6 +24,34 @@ function getConnection(): Connection {
   return connection;
 }
 
+async function fetchBurnedTokens(): Promise<number> {
+  try {
+    const conn = getConnection();
+    const tokenMint = new PublicKey(TOKEN_ADDRESS);
+    
+    const tokenSupply = await conn.getTokenSupply(tokenMint);
+    const currentSupply = tokenSupply.value.uiAmount || 0;
+    const totalMinted = 1000000000;
+    
+    const burned = totalMinted - currentSupply;
+    if (burned > 0) {
+      cachedBurnedTokens = Math.floor(burned);
+      console.log(`[Solana] Fetched burn data - Burned: ${formatBurnedTokens(cachedBurnedTokens)} tokens`);
+    }
+    
+    return cachedBurnedTokens;
+  } catch (error) {
+    console.error("[Solana] Error fetching burned tokens:", error);
+    return cachedBurnedTokens;
+  }
+}
+
+function formatBurnedTokens(num: number): string {
+  if (num >= 1000000) return `${(num / 1000000).toFixed(2)}M`;
+  if (num >= 1000) return `${(num / 1000).toFixed(2)}K`;
+  return num.toString();
+}
+
 export async function fetchTokenMetrics(): Promise<TokenMetrics> {
   const now = Date.now();
   
@@ -29,7 +60,11 @@ export async function fetchTokenMetrics(): Promise<TokenMetrics> {
   }
   
   try {
-    const response = await fetch(`${DEXSCREENER_API}/${TOKEN_ADDRESS}`);
+    const [response, burnedTokens] = await Promise.all([
+      fetch(`${DEXSCREENER_API}/${TOKEN_ADDRESS}`),
+      fetchBurnedTokens(),
+    ]);
+    
     if (!response.ok) {
       throw new Error(`DexScreener API error: ${response.status}`);
     }
@@ -47,7 +82,10 @@ export async function fetchTokenMetrics(): Promise<TokenMetrics> {
       const liquidity = pair.liquidity?.usd || 0;
       const priceChange24h = pair.priceChange?.h24 || 0;
       
-      console.log(`[DexScreener] Fetched real data - Price: $${price.toFixed(8)}, MCap: $${marketCap}`);
+      const totalSupply = 1000000000;
+      const circulatingSupply = totalSupply - burnedTokens - 230000000;
+      
+      console.log(`[DexScreener] Fetched real data - Price: $${price.toFixed(8)}, MCap: $${marketCap}, Burned: ${formatBurnedTokens(burnedTokens)}`);
       
       currentMetrics = {
         price,
@@ -56,9 +94,9 @@ export async function fetchTokenMetrics(): Promise<TokenMetrics> {
         marketCapChange24h: priceChange24h,
         volume24h,
         liquidity,
-        totalSupply: 1000000000,
-        circulatingSupply: pair.fdv && price > 0 ? Math.floor(pair.fdv / price) : 1000000000,
-        burnedTokens: 572000000,
+        totalSupply,
+        circulatingSupply,
+        burnedTokens,
         lockedTokens: 230000000,
         holders: 0,
         lastUpdated: new Date().toISOString(),
@@ -84,7 +122,7 @@ export async function fetchTokenMetrics(): Promise<TokenMetrics> {
       liquidity: 0,
       totalSupply: 1000000000,
       circulatingSupply: 1000000000,
-      burnedTokens: 572000000,
+      burnedTokens: cachedBurnedTokens,
       lockedTokens: 230000000,
       holders: 0,
       lastUpdated: new Date().toISOString(),

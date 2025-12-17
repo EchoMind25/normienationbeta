@@ -123,10 +123,13 @@ function StatCard({ title, value, change, icon, color = "text-primary", isLoadin
 
 export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnected }: DashboardProps) {
   const formatPrice = (price: number) => {
-    if (price < 0.001) {
-      return `$${price.toFixed(8)}`;
+    if (price < 0.00001) {
+      return price.toFixed(10);
     }
-    return `$${price.toFixed(6)}`;
+    if (price < 0.001) {
+      return price.toFixed(8);
+    }
+    return price.toFixed(6);
   };
 
   const formatNumber = (num: number) => {
@@ -335,7 +338,7 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             title="Price"
-            value={metrics ? formatPrice(metrics.price) : "$0.00"}
+            value={metrics ? `$${formatPrice(metrics.price)}` : "$0.00"}
             change={metrics?.priceChange24h}
             icon={<DollarSign className="h-5 w-5" />}
             isLoading={isLoading}
