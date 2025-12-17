@@ -25,65 +25,65 @@ import {
 import { SiX } from "react-icons/si";
 
 const NORMIE_STICKERS = [
-  { id: "pepe-classic", name: "Classic Pepe", emoji: "P", color: "#22c55e" },
-  { id: "pepe-smug", name: "Smug Pepe", emoji: "S", color: "#16a34a" },
-  { id: "pepe-angry", name: "Angry Pepe", emoji: "A", color: "#dc2626" },
-  { id: "pepe-cry", name: "Crying Pepe", emoji: "C", color: "#3b82f6" },
-  { id: "pepe-laugh", name: "Laughing Pepe", emoji: "L", color: "#eab308" },
-  { id: "pepe-monkas", name: "Monkas", emoji: "MK", color: "#22c55e" },
-  { id: "pepe-comfy", name: "Comfy Pepe", emoji: "CF", color: "#a16207" },
-  { id: "pepe-peepo", name: "Peepo", emoji: "PP", color: "#84cc16" },
-  { id: "wojak-sad", name: "Sad Wojak", emoji: "W", color: "#6b7280" },
-  { id: "wojak-npc", name: "NPC Wojak", emoji: "N", color: "#9ca3af" },
-  { id: "wojak-doomer", name: "Doomer", emoji: "D", color: "#374151" },
-  { id: "wojak-bloomer", name: "Bloomer", emoji: "B", color: "#f472b6" },
-  { id: "wojak-zoomer", name: "Zoomer", emoji: "Z", color: "#06b6d4" },
-  { id: "wojak-boomer", name: "Boomer", emoji: "BO", color: "#854d0e" },
-  { id: "wojak-glow", name: "Glow Wojak", emoji: "GW", color: "#22d3ee" },
-  { id: "chad", name: "Chad", emoji: "CH", color: "#06b6d4" },
-  { id: "troll-face", name: "Troll Face", emoji: "T", color: "#f5f5f5" },
-  { id: "doge", name: "Doge", emoji: "DG", color: "#f59e0b" },
-  { id: "cheems", name: "Cheems", emoji: "CM", color: "#fbbf24" },
-  { id: "rage-guy", name: "Rage Guy", emoji: "RG", color: "#ef4444" },
+  { id: "pepe-classic", name: "Classic Pepe", emoji: "🐸", color: "#22c55e" },
+  { id: "pepe-smug", name: "Smug Pepe", emoji: "😏", color: "#16a34a" },
+  { id: "pepe-angry", name: "Angry Pepe", emoji: "😤", color: "#dc2626" },
+  { id: "pepe-cry", name: "Crying Pepe", emoji: "😢", color: "#3b82f6" },
+  { id: "pepe-laugh", name: "Laughing Pepe", emoji: "🤣", color: "#eab308" },
+  { id: "pepe-monkas", name: "Monkas", emoji: "😰", color: "#22c55e" },
+  { id: "pepe-comfy", name: "Comfy Pepe", emoji: "😌", color: "#a16207" },
+  { id: "pepe-peepo", name: "Peepo", emoji: "🥺", color: "#84cc16" },
+  { id: "wojak-sad", name: "Sad Wojak", emoji: "😔", color: "#6b7280" },
+  { id: "wojak-npc", name: "NPC Wojak", emoji: "🤖", color: "#9ca3af" },
+  { id: "wojak-doomer", name: "Doomer", emoji: "💀", color: "#374151" },
+  { id: "wojak-bloomer", name: "Bloomer", emoji: "🌸", color: "#f472b6" },
+  { id: "wojak-zoomer", name: "Zoomer", emoji: "⚡", color: "#06b6d4" },
+  { id: "wojak-boomer", name: "Boomer", emoji: "👴", color: "#854d0e" },
+  { id: "wojak-glow", name: "Glow Wojak", emoji: "✨", color: "#22d3ee" },
+  { id: "chad", name: "Chad", emoji: "💪", color: "#06b6d4" },
+  { id: "troll-face", name: "Troll Face", emoji: "😈", color: "#f5f5f5" },
+  { id: "doge", name: "Doge", emoji: "🐕", color: "#f59e0b" },
+  { id: "cheems", name: "Cheems", emoji: "🐶", color: "#fbbf24" },
+  { id: "rage-guy", name: "Rage Guy", emoji: "🔥", color: "#ef4444" },
 ];
 
 const CRYPTO_STICKERS = [
-  { id: "bitcoin", name: "Bitcoin", emoji: "BTC", color: "#f7931a" },
-  { id: "ethereum", name: "Ethereum", emoji: "ETH", color: "#627eea" },
-  { id: "solana", name: "Solana", emoji: "SOL", color: "#9945ff" },
-  { id: "bnb", name: "BNB", emoji: "BNB", color: "#f0b90b" },
-  { id: "doge-coin", name: "Dogecoin", emoji: "DOG", color: "#c3a634" },
-  { id: "diamond-hands", name: "Diamond Hands", emoji: "DH", color: "#3b82f6" },
-  { id: "paper-hands", name: "Paper Hands", emoji: "PH", color: "#9ca3af" },
-  { id: "moon", name: "Moon", emoji: "M", color: "#fbbf24" },
-  { id: "rocket", name: "Rocket", emoji: "R", color: "#ef4444" },
-  { id: "whale", name: "Whale", emoji: "WH", color: "#0ea5e9" },
-  { id: "shrimp", name: "Shrimp", emoji: "SH", color: "#f472b6" },
-  { id: "chart-up", name: "Chart Up", emoji: "UP", color: "#22c55e" },
-  { id: "chart-down", name: "Chart Down", emoji: "DN", color: "#ef4444" },
-  { id: "hodl", name: "HODL", emoji: "HD", color: "#8b5cf6" },
-  { id: "burn", name: "Token Burn", emoji: "BR", color: "#f97316" },
-  { id: "rug", name: "Rug Pull", emoji: "RP", color: "#dc2626" },
-  { id: "pump", name: "Pump", emoji: "PU", color: "#22c55e" },
-  { id: "dump", name: "Dump", emoji: "DU", color: "#ef4444" },
+  { id: "bitcoin", name: "Bitcoin", emoji: "₿", color: "#f7931a" },
+  { id: "ethereum", name: "Ethereum", emoji: "Ξ", color: "#627eea" },
+  { id: "solana", name: "Solana", emoji: "◎", color: "#9945ff" },
+  { id: "bnb", name: "BNB", emoji: "🔶", color: "#f0b90b" },
+  { id: "doge-coin", name: "Dogecoin", emoji: "🐕", color: "#c3a634" },
+  { id: "diamond-hands", name: "Diamond Hands", emoji: "💎", color: "#3b82f6" },
+  { id: "paper-hands", name: "Paper Hands", emoji: "📄", color: "#9ca3af" },
+  { id: "moon", name: "Moon", emoji: "🌙", color: "#fbbf24" },
+  { id: "rocket", name: "Rocket", emoji: "🚀", color: "#ef4444" },
+  { id: "whale", name: "Whale", emoji: "🐋", color: "#0ea5e9" },
+  { id: "shrimp", name: "Shrimp", emoji: "🦐", color: "#f472b6" },
+  { id: "chart-up", name: "Chart Up", emoji: "📈", color: "#22c55e" },
+  { id: "chart-down", name: "Chart Down", emoji: "📉", color: "#ef4444" },
+  { id: "hodl", name: "HODL", emoji: "🤲", color: "#8b5cf6" },
+  { id: "burn", name: "Token Burn", emoji: "🔥", color: "#f97316" },
+  { id: "rug", name: "Rug Pull", emoji: "🧹", color: "#dc2626" },
+  { id: "pump", name: "Pump", emoji: "⬆️", color: "#22c55e" },
+  { id: "dump", name: "Dump", emoji: "⬇️", color: "#ef4444" },
 ];
 
 const BRAND_STICKERS = [
-  { id: "normie-logo", name: "Normie Logo", emoji: "NM", color: "#22c55e" },
-  { id: "normie-nation", name: "Normie Nation", emoji: "NN", color: "#16a34a" },
-  { id: "based", name: "BASED", emoji: "BA", color: "#8b5cf6" },
-  { id: "ngmi", name: "NGMI", emoji: "NG", color: "#ef4444" },
-  { id: "wagmi", name: "WAGMI", emoji: "WG", color: "#22c55e" },
-  { id: "gmi", name: "GMI", emoji: "GI", color: "#22c55e" },
-  { id: "verified", name: "Verified", emoji: "V", color: "#3b82f6" },
-  { id: "4chan-clover", name: "4chan Clover", emoji: "4C", color: "#22c55e" },
-  { id: "anon", name: "Anonymous", emoji: "AN", color: "#374151" },
-  { id: "supply-burn", name: "Supply Burn", emoji: "SB", color: "#f97316" },
-  { id: "locked", name: "Locked", emoji: "LK", color: "#eab308" },
-  { id: "gm", name: "GM", emoji: "GM", color: "#fbbf24" },
-  { id: "gn", name: "GN", emoji: "GN", color: "#1e293b" },
-  { id: "lfg", name: "LFG", emoji: "LF", color: "#f97316" },
-  { id: "fud", name: "FUD", emoji: "FD", color: "#dc2626" },
+  { id: "normie-logo", name: "Normie Logo", emoji: "🐸", color: "#22c55e" },
+  { id: "normie-nation", name: "Normie Nation", emoji: "🌍", color: "#16a34a" },
+  { id: "based", name: "BASED", emoji: "👑", color: "#8b5cf6" },
+  { id: "ngmi", name: "NGMI", emoji: "❌", color: "#ef4444" },
+  { id: "wagmi", name: "WAGMI", emoji: "✅", color: "#22c55e" },
+  { id: "gmi", name: "GMI", emoji: "🎯", color: "#22c55e" },
+  { id: "verified", name: "Verified", emoji: "✓", color: "#3b82f6" },
+  { id: "4chan-clover", name: "4chan Clover", emoji: "🍀", color: "#22c55e" },
+  { id: "anon", name: "Anonymous", emoji: "🎭", color: "#374151" },
+  { id: "supply-burn", name: "Supply Burn", emoji: "🔥", color: "#f97316" },
+  { id: "locked", name: "Locked", emoji: "🔒", color: "#eab308" },
+  { id: "gm", name: "GM", emoji: "☀️", color: "#fbbf24" },
+  { id: "gn", name: "GN", emoji: "🌙", color: "#1e293b" },
+  { id: "lfg", name: "LFG", emoji: "🚀", color: "#f97316" },
+  { id: "fud", name: "FUD", emoji: "😱", color: "#dc2626" },
 ];
 
 const COLOR_PRESETS = [
@@ -365,15 +365,14 @@ export function MemeGenerator() {
         ctx.fillText(sticker.content, 0, 0);
       } else {
         ctx.beginPath();
-        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+        ctx.arc(0, 0, 28, 0, Math.PI * 2);
         ctx.fillStyle = sticker.color || "#22c55e";
         ctx.fill();
         
-        ctx.fillStyle = "#fff";
-        ctx.font = "bold 16px JetBrains Mono";
+        ctx.font = "32px serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText(sticker.content.substring(0, 2), 0, 0);
+        ctx.fillText(sticker.content, 0, 0);
       }
       
       ctx.restore();
@@ -822,7 +821,7 @@ export function MemeGenerator() {
                           data-testid={`button-sticker-${sticker.id}`}
                         >
                           <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
                             style={{ backgroundColor: sticker.color }}
                           >
                             {sticker.emoji}
