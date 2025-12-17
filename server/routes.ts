@@ -30,6 +30,8 @@ export async function registerRoutes(
   
   app.get("/api/metrics", async (_req, res) => {
     try {
+      res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      res.set("Pragma", "no-cache");
       const metrics = await fetchTokenMetrics();
       res.json(metrics);
     } catch (error) {
@@ -39,6 +41,8 @@ export async function registerRoutes(
   
   app.get("/api/price-history", (_req, res) => {
     try {
+      res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      res.set("Pragma", "no-cache");
       const history = getPriceHistory();
       res.json(history);
     } catch (error) {
@@ -48,6 +52,8 @@ export async function registerRoutes(
   
   app.get("/api/dev-buys", (_req, res) => {
     try {
+      res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      res.set("Pragma", "no-cache");
       const buys = getDevBuys();
       res.json(buys);
     } catch (error) {

@@ -13,7 +13,11 @@ export function useWebSocket() {
 
   const fetchMetrics = useCallback(async () => {
     try {
-      const response = await fetch("/api/metrics");
+      const response = await fetch("/api/metrics", {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
+      if (response.status === 304) return;
       if (!response.ok) throw new Error("Failed to fetch metrics");
       
       const data = await response.json();
@@ -34,6 +38,7 @@ export function useWebSocket() {
   const fetchPriceHistory = useCallback(async () => {
     try {
       const response = await fetch("/api/price-history", {
+        cache: "no-store",
         headers: { "Cache-Control": "no-cache" },
       });
       if (response.status === 304) return;
@@ -52,6 +57,7 @@ export function useWebSocket() {
   const fetchDevBuys = useCallback(async () => {
     try {
       const response = await fetch("/api/dev-buys", {
+        cache: "no-store",
         headers: { "Cache-Control": "no-cache" },
       });
       if (response.status === 304) return;
