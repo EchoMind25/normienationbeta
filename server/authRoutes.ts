@@ -31,7 +31,7 @@ router.post("/wallet/challenge", async (req: Request, res: Response) => {
   try {
     const { walletAddress } = req.body;
     
-    if (!walletAddress || typeof walletAddress !== "string" || walletAddress.length !== 44) {
+    if (!walletAddress || typeof walletAddress !== "string" || walletAddress.length < 32 || walletAddress.length > 44) {
       res.status(400).json({ error: "Invalid wallet address" });
       return;
     }

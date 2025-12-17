@@ -167,12 +167,10 @@ export function Header({ metrics, isDark, onToggleTheme }: HeaderProps) {
                   Profile
                 </DropdownMenuItem>
                 {isAdmin && (
-                  <>
-                    <DropdownMenuItem data-testid="menu-admin">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Admin Panel
-                    </DropdownMenuItem>
-                  </>
+                  <DropdownMenuItem onClick={() => setLocation("/admin")} data-testid="menu-admin">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admin Panel
+                  </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} data-testid="menu-logout">
