@@ -1,10 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Terminal, Menu, X, Sun, Moon, Users, Flame, ExternalLink } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Terminal, Menu, X, Sun, Moon, Users, Flame, LogIn, LogOut, User, Shield } from "lucide-react";
 import { SiTelegram, SiX } from "react-icons/si";
 import { NORMIE_TOKEN } from "@shared/schema";
 import type { TokenMetrics } from "@shared/schema";
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthModal } from "./AuthModal";
 
 interface HeaderProps {
   metrics: TokenMetrics | null;
@@ -14,6 +23,8 @@ interface HeaderProps {
 
 export function Header({ metrics, isDark, onToggleTheme }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -138,6 +149,53 @@ export function Header({ metrics, isDark, onToggleTheme }: HeaderProps) {
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
 
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="font-mono gap-2" data-testid="button-user-menu">
+                  {isAdmin && <Shield className="h-3 w-3 text-primary" />}
+                  <User className="h-4 w-4" />
+                  <span className="hidden sm:inline max-w-[100px] truncate">
+                    {user?.username}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="font-mono">
+                <DropdownMenuItem className="text-muted-foreground text-xs" disabled>
+                  {user?.walletAddress 
+                    ? `${user.walletAddress.slice(0, 4)}...${user.walletAddress.slice(-4)}`
+                    : user?.email
+                  }
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {isAdmin && (
+                  <>
+                    <DropdownMenuItem data-testid="menu-admin">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Admin Panel
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem onClick={logout} data-testid="menu-logout">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              variant="default"
+              size="sm"
+              className="font-mono gap-2"
+              onClick={() => setShowAuthModal(true)}
+              data-testid="button-login"
+            >
+              <LogIn className="h-4 w-4" />
+              <span className="hidden sm:inline">Connect</span>
+            </Button>
+          )}
+
           <Button
             variant="ghost"
             size="icon"
@@ -149,6 +207,8 @@ export function Header({ metrics, isDark, onToggleTheme }: HeaderProps) {
           </Button>
         </div>
       </div>
+
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
 
       <div className="overflow-hidden border-t border-border">
         <div className="animate-ticker whitespace-nowrap py-1 px-4">

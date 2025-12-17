@@ -1,0 +1,431 @@
+import { Router, Request, Response } from "express";
+import { body, validationResult } from "express-validator";
+import sgMail from "@sendgrid/mail";
+import { storage } from "./storage";
+import {
+  createJWT,
+  hashPassword,
+  verifyPassword,
+  generateChallenge,
+  verifyWalletSignature,
+  generatePasswordResetToken,
+  authMiddleware,
+  determineRole,
+  type AuthRequest,
+} from "./auth";
+
+const router = Router();
+
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+const CHALLENGE_EXPIRY_MINUTES = 5;
+const PASSWORD_RESET_EXPIRY_HOURS = 1;
+
+// =====================================================
+// Wallet Authentication
+// =====================================================
+
+router.post("/wallet/challenge", async (req: Request, res: Response) => {
+  try {
+    const { walletAddress } = req.body;
+    
+    if (!walletAddress || typeof walletAddress !== "string" || walletAddress.length !== 44) {
+      res.status(400).json({ error: "Invalid wallet address" });
+      return;
+    }
+
+    const challenge = generateChallenge();
+    const expiresAt = new Date(Date.now() + CHALLENGE_EXPIRY_MINUTES * 60 * 1000);
+
+    await storage.createAuthChallenge({
+      walletAddress,
+      challenge,
+      expiresAt,
+    });
+
+    res.json({ challenge });
+  } catch (error) {
+    console.error("[Auth] Challenge generation error:", error);
+    res.status(500).json({ error: "Failed to generate challenge" });
+  }
+});
+
+router.post("/wallet/verify", async (req: Request, res: Response) => {
+  try {
+    const { walletAddress, challenge, signature, publicKey } = req.body;
+
+    if (!walletAddress || !challenge || !signature || !publicKey) {
+      res.status(400).json({ error: "Missing required fields" });
+      return;
+    }
+
+    const authChallenge = await storage.getAuthChallenge(walletAddress, challenge);
+    if (!authChallenge) {
+      res.status(400).json({ error: "Invalid or expired challenge" });
+      return;
+    }
+
+    const isValid = verifyWalletSignature(challenge, signature, publicKey);
+    if (!isValid) {
+      res.status(401).json({ error: "Invalid signature" });
+      return;
+    }
+
+    await storage.markAuthChallengeUsed(authChallenge.id);
+
+    let user = await storage.getUserByWallet(walletAddress);
+    
+    if (!user) {
+      const username = `normie_${walletAddress.slice(0, 8)}`;
+      const role = determineRole(walletAddress);
+      
+      user = await storage.createUser({
+        walletAddress,
+        username,
+        role,
+      });
+    } else if (user.role !== "admin" && determineRole(walletAddress) === "admin") {
+      user = await storage.updateUser(user.id, { role: "admin" }) || user;
+    }
+
+    const token = createJWT({
+      userId: user.id,
+      walletAddress: user.walletAddress,
+      email: user.email,
+      role: user.role || "user",
+    });
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await storage.createSession({
+      userId: user.id,
+      token,
+      expiresAt,
+    });
+
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        walletAddress: user.walletAddress,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("[Auth] Wallet verification error:", error);
+    res.status(500).json({ error: "Authentication failed" });
+  }
+});
+
+// =====================================================
+// Email/Password Authentication
+// =====================================================
+
+router.post(
+  "/register",
+  [
+    body("email").isEmail().normalizeEmail(),
+    body("password")
+      .isLength({ min: 8 })
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+      .withMessage("Password must be at least 8 characters with lowercase, uppercase, and number"),
+    body("username")
+      .isLength({ min: 3, max: 50 })
+      .matches(/^[a-zA-Z0-9_]+$/)
+      .withMessage("Username must be alphanumeric with underscores"),
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const { email, password, username } = req.body;
+
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        res.status(400).json({ error: "Email already registered" });
+        return;
+      }
+
+      const existingUsername = await storage.getUserByUsername(username);
+      if (existingUsername) {
+        res.status(400).json({ error: "Username already taken" });
+        return;
+      }
+
+      const passwordHash = await hashPassword(password);
+
+      const user = await storage.createUser({
+        email,
+        passwordHash,
+        username,
+        role: "user",
+      });
+
+      const token = createJWT({
+        userId: user.id,
+        walletAddress: null,
+        email: user.email,
+        role: user.role || "user",
+      });
+
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      await storage.createSession({
+        userId: user.id,
+        token,
+        expiresAt,
+      });
+
+      res.cookie("authToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      res.status(201).json({
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
+        token,
+      });
+    } catch (error) {
+      console.error("[Auth] Registration error:", error);
+      res.status(500).json({ error: "Registration failed" });
+    }
+  }
+);
+
+router.post(
+  "/login",
+  [
+    body("email").isEmail().normalizeEmail(),
+    body("password").notEmpty(),
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const { email, password } = req.body;
+
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.passwordHash) {
+        res.status(401).json({ error: "Invalid credentials" });
+        return;
+      }
+
+      if (user.bannedAt) {
+        res.status(403).json({ error: "Account banned" });
+        return;
+      }
+
+      const isValid = await verifyPassword(password, user.passwordHash);
+      if (!isValid) {
+        res.status(401).json({ error: "Invalid credentials" });
+        return;
+      }
+
+      const token = createJWT({
+        userId: user.id,
+        walletAddress: user.walletAddress,
+        email: user.email,
+        role: user.role || "user",
+      });
+
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      await storage.createSession({
+        userId: user.id,
+        token,
+        expiresAt,
+      });
+
+      res.cookie("authToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      res.json({
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          walletAddress: user.walletAddress,
+          role: user.role,
+          avatarUrl: user.avatarUrl,
+        },
+        token,
+      });
+    } catch (error) {
+      console.error("[Auth] Login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  }
+);
+
+router.post("/logout", authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    if (req.token) {
+      const session = await storage.getSessionByToken(req.token);
+      if (session) {
+        await storage.deleteSession(session.id);
+      }
+    }
+
+    res.clearCookie("authToken");
+    res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("[Auth] Logout error:", error);
+    res.status(500).json({ error: "Logout failed" });
+  }
+});
+
+// =====================================================
+// Password Reset
+// =====================================================
+
+router.post(
+  "/request-reset",
+  [body("email").isEmail().normalizeEmail()],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const { email } = req.body;
+
+      const user = await storage.getUserByEmail(email);
+      
+      res.json({ message: "If an account exists, a reset email has been sent" });
+
+      if (!user) return;
+
+      const token = generatePasswordResetToken();
+      const expiresAt = new Date(Date.now() + PASSWORD_RESET_EXPIRY_HOURS * 60 * 60 * 1000);
+
+      await storage.createPasswordResetToken({
+        userId: user.id,
+        token,
+        expiresAt,
+      });
+
+      if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL) {
+        const resetLink = `${process.env.APP_URL || "https://normienation.replit.app"}/reset-password?token=${token}`;
+        
+        await sgMail.send({
+          to: email,
+          from: process.env.SENDGRID_FROM_EMAIL,
+          subject: "Normie Nation Password Reset",
+          html: `
+            <html>
+            <body style="background: #000; color: #00ff00; font-family: monospace; padding: 20px;">
+              <h2>Normie Nation Password Reset</h2>
+              <p>Click below to reset your password (expires in 1 hour):</p>
+              <a href="${resetLink}" style="color: #00ff00; font-size: 16px;">Reset Password</a>
+              <p style="margin-top: 20px;">If you didn't request this, ignore this email.</p>
+            </body>
+            </html>
+          `,
+        });
+      }
+    } catch (error) {
+      console.error("[Auth] Password reset request error:", error);
+      res.json({ message: "If an account exists, a reset email has been sent" });
+    }
+  }
+);
+
+router.post(
+  "/reset-password",
+  [
+    body("token").notEmpty(),
+    body("password")
+      .isLength({ min: 8 })
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/),
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const { token, password } = req.body;
+
+      const resetToken = await storage.getPasswordResetToken(token);
+      if (!resetToken) {
+        res.status(400).json({ error: "Invalid or expired reset token" });
+        return;
+      }
+
+      const passwordHash = await hashPassword(password);
+      await storage.updateUser(resetToken.userId, { passwordHash });
+
+      await storage.markPasswordResetTokenUsed(resetToken.id);
+
+      await storage.deleteUserSessions(resetToken.userId);
+
+      res.json({ message: "Password reset successfully" });
+    } catch (error) {
+      console.error("[Auth] Password reset error:", error);
+      res.status(500).json({ error: "Password reset failed" });
+    }
+  }
+);
+
+// =====================================================
+// Current User
+// =====================================================
+
+router.get("/me", authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    res.json({
+      user: {
+        id: req.user.id,
+        username: req.user.username,
+        email: req.user.email,
+        walletAddress: req.user.walletAddress,
+        role: req.user.role,
+        avatarUrl: req.user.avatarUrl,
+        bio: req.user.bio,
+        holdingsVisible: req.user.holdingsVisible,
+        createdAt: req.user.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("[Auth] Get current user error:", error);
+    res.status(500).json({ error: "Failed to get user data" });
+  }
+});
+
+export default router;

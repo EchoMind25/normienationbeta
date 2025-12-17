@@ -1,11 +1,34 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 import { fetchTokenMetrics, getMetrics, getPriceHistory, addPricePoint, fetchDevBuys, getDevBuys, getConnectionStatus } from "./solana";
+import authRoutes from "./authRoutes";
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: "Too many requests, try again later" },
+  validate: { xForwardedForHeader: false },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Too many authentication attempts, try again later" },
+  validate: { xForwardedForHeader: false },
+});
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  app.use(cookieParser());
+  
+  app.use("/api/auth", authLimiter, authRoutes);
+  
+  app.use("/api", apiLimiter);
   
   const updateMetrics = async () => {
     try {
