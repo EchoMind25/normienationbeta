@@ -14,7 +14,7 @@ export function useTheme() {
 
   useEffect(() => {
     const root = document.documentElement;
-    
+
     if (theme === "dark") {
       root.classList.add("dark");
       root.classList.remove("light");
@@ -22,7 +22,7 @@ export function useTheme() {
       root.classList.add("light");
       root.classList.remove("dark");
     }
-    
+
     localStorage.setItem("normie-theme", theme);
   }, [theme]);
 

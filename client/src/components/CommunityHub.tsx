@@ -47,76 +47,84 @@ export function CommunityHub() {
   const [isVoting, setIsVoting] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchPolls = useCallback(async (showLoading = false) => {
-    if (showLoading) setIsLoadingPolls(true);
-    try {
-      const response = await fetch("/api/polls");
-      if (response.ok) {
-        const data = await response.json();
-        setPolls(data);
-        
-        const visitorId = getVisitorId();
-        for (const poll of data) {
-          const voteCheck = await fetch(`/api/polls/${poll.id}/voted?visitorId=${encodeURIComponent(visitorId)}`);
-          if (voteCheck.ok) {
-            const { hasVoted } = await voteCheck.json();
-            if (hasVoted) {
-              setVotedPolls((prev) => new Set(prev).add(poll.id));
+  const fetchPolls = useCallback(
+    async (showLoading = false) => {
+      if (showLoading) setIsLoadingPolls(true);
+      try {
+        const response = await fetch("/api/polls");
+        if (response.ok) {
+          const data = await response.json();
+          setPolls(data);
+
+          const visitorId = getVisitorId();
+          for (const poll of data) {
+            const voteCheck = await fetch(
+              `/api/polls/${poll.id}/voted?visitorId=${encodeURIComponent(visitorId)}`
+            );
+            if (voteCheck.ok) {
+              const { hasVoted } = await voteCheck.json();
+              if (hasVoted) {
+                setVotedPolls((prev) => new Set(prev).add(poll.id));
+              }
             }
           }
+        } else {
+          toast({
+            title: "Connection issue",
+            description: "Could not load polls. Try refreshing.",
+            variant: "destructive",
+          });
         }
-      } else {
+      } catch (error) {
+        console.error("[Polls] Error fetching polls:", error);
         toast({
           title: "Connection issue",
           description: "Could not load polls. Try refreshing.",
           variant: "destructive",
         });
+      } finally {
+        setIsLoadingPolls(false);
       }
-    } catch (error) {
-      console.error("[Polls] Error fetching polls:", error);
-      toast({
-        title: "Connection issue",
-        description: "Could not load polls. Try refreshing.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingPolls(false);
-    }
-  }, [toast]);
+    },
+    [toast]
+  );
 
-  const fetchActivity = useCallback(async (showLoading = false) => {
-    if (showLoading) setIsLoadingActivity(true);
-    try {
-      const response = await fetch("/api/activity");
-      if (response.ok) {
-        const data = await response.json();
-        setActivity(data);
-      } else {
+  const fetchActivity = useCallback(
+    async (showLoading = false) => {
+      if (showLoading) setIsLoadingActivity(true);
+      try {
+        const response = await fetch("/api/activity");
+        if (response.ok) {
+          const data = await response.json();
+          setActivity(data);
+        } else {
+          toast({
+            title: "Connection issue",
+            description: "Could not load activity. Try refreshing.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("[Activity] Error fetching activity:", error);
         toast({
           title: "Connection issue",
           description: "Could not load activity. Try refreshing.",
           variant: "destructive",
         });
+      } finally {
+        setIsLoadingActivity(false);
       }
-    } catch (error) {
-      console.error("[Activity] Error fetching activity:", error);
-      toast({
-        title: "Connection issue",
-        description: "Could not load activity. Try refreshing.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingActivity(false);
-    }
-  }, [toast]);
+    },
+    [toast]
+  );
 
   useEffect(() => {
     fetchPolls();
     fetchActivity();
-    
+
     const pollInterval = setInterval(fetchPolls, 30000);
     const activityInterval = setInterval(fetchActivity, 15000);
-    
+
     return () => {
       clearInterval(pollInterval);
       clearInterval(activityInterval);
@@ -138,9 +146,7 @@ export function CommunityHub() {
 
       if (response.ok) {
         const updatedPoll = await response.json();
-        setPolls((prev) =>
-          prev.map((poll) => (poll.id === pollId ? updatedPoll : poll))
-        );
+        setPolls((prev) => prev.map((poll) => (poll.id === pollId ? updatedPoll : poll)));
         setVotedPolls((prev) => new Set(prev).add(pollId));
         toast({
           title: "Vote recorded!",
@@ -215,68 +221,67 @@ export function CommunityHub() {
               <Card className="p-6 text-center">
                 <Vote className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
                 <p className="text-sm text-muted-foreground">No active polls right now</p>
-                <p className="text-xs text-muted-foreground mt-1">Check back soon for community voting!</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Check back soon for community voting!
+                </p>
               </Card>
-            ) : polls.map((poll) => (
-              <Card key={poll.id} className="p-4" data-testid={`card-poll-${poll.id}`}>
-                <div className="flex items-start justify-between gap-2 mb-4">
-                  <h4 className="font-mono font-medium">{poll.question}</h4>
-                  {poll.isActive && (
-                    <Badge variant="outline" className="text-xs">
-                      Live
-                    </Badge>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  {poll.options.map((option) => {
-                    const percentage = poll.totalVotes > 0 
-                      ? (option.votes / poll.totalVotes) * 100 
-                      : 0;
-                    const hasVoted = votedPolls.has(poll.id);
+            ) : (
+              polls.map((poll) => (
+                <Card key={poll.id} className="p-4" data-testid={`card-poll-${poll.id}`}>
+                  <div className="flex items-start justify-between gap-2 mb-4">
+                    <h4 className="font-mono font-medium">{poll.question}</h4>
+                    {poll.isActive && (
+                      <Badge variant="outline" className="text-xs">
+                        Live
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    {poll.options.map((option) => {
+                      const percentage =
+                        poll.totalVotes > 0 ? (option.votes / poll.totalVotes) * 100 : 0;
+                      const hasVoted = votedPolls.has(poll.id);
 
-                    return (
-                      <button
-                        key={option.id}
-                        className={`w-full text-left p-3 rounded-md border transition-colors ${
-                          hasVoted
-                            ? "cursor-default"
-                            : "hover-elevate cursor-pointer"
-                        }`}
-                        onClick={() => handleVote(poll.id, option.id)}
-                        disabled={hasVoted}
-                        data-testid={`button-vote-${poll.id}-${option.id}`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-mono">{option.text}</span>
-                          <span className="text-xs font-mono text-muted-foreground">
-                            {percentage.toFixed(0)}%
-                          </span>
-                        </div>
-                        <Progress value={percentage} className="h-2" />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {option.votes} votes
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center justify-between mt-4 pt-3 border-t">
-                  <span className="text-xs font-mono text-muted-foreground flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    {poll.totalVotes} total votes
-                  </span>
-                  <a
-                    href={`https://t.me/${NORMIE_TOKEN.telegram.replace("@", "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-mono text-primary flex items-center gap-1"
-                    data-testid="link-discuss-telegram"
-                  >
-                    Discuss <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              </Card>
-            ))}
+                      return (
+                        <button
+                          key={option.id}
+                          className={`w-full text-left p-3 rounded-md border transition-colors ${
+                            hasVoted ? "cursor-default" : "hover-elevate cursor-pointer"
+                          }`}
+                          onClick={() => handleVote(poll.id, option.id)}
+                          disabled={hasVoted}
+                          data-testid={`button-vote-${poll.id}-${option.id}`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-mono">{option.text}</span>
+                            <span className="text-xs font-mono text-muted-foreground">
+                              {percentage.toFixed(0)}%
+                            </span>
+                          </div>
+                          <Progress value={percentage} className="h-2" />
+                          <p className="text-xs text-muted-foreground mt-1">{option.votes} votes</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t">
+                    <span className="text-xs font-mono text-muted-foreground flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      {poll.totalVotes} total votes
+                    </span>
+                    <a
+                      href={`https://t.me/${NORMIE_TOKEN.telegram.replace("@", "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-mono text-primary flex items-center gap-1"
+                      data-testid="link-discuss-telegram"
+                    >
+                      Discuss <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                </Card>
+              ))
+            )}
           </div>
 
           <div className="space-y-4">
@@ -296,9 +301,7 @@ export function CommunityHub() {
             <Card className="p-0 overflow-hidden">
               <div className="bg-muted/50 px-4 py-2 border-b flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                <span className="text-xs font-mono text-muted-foreground">
-                  LIVE TERMINAL
-                </span>
+                <span className="text-xs font-mono text-muted-foreground">LIVE TERMINAL</span>
               </div>
               <ScrollArea className="h-80">
                 <div className="p-4 space-y-3 font-mono text-sm">
@@ -324,7 +327,9 @@ export function CommunityHub() {
                         className="flex items-start gap-3 p-2 rounded-md bg-muted/30"
                         data-testid={`activity-${item.id}`}
                       >
-                        <div className="mt-0.5">{ACTIVITY_ICONS[item.type] || <Zap className="h-4 w-4" />}</div>
+                        <div className="mt-0.5">
+                          {ACTIVITY_ICONS[item.type] || <Zap className="h-4 w-4" />}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-foreground">{item.message}</p>
                           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
@@ -349,7 +354,7 @@ export function CommunityHub() {
               <MessageCircle className="h-4 w-4" />
               Join The Nation
             </h3>
-            
+
             <Card className="p-6 bg-gradient-to-br from-[#0088cc]/10 to-transparent border-[#0088cc]/30">
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-12 w-12 rounded-full bg-[#0088cc] flex items-center justify-center">
@@ -361,7 +366,8 @@ export function CommunityHub() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Join the official Normie Nation chat. Daily alpha, raid coordination, and community vibes.
+                Join the official Normie Nation chat. Daily alpha, raid coordination, and community
+                vibes.
               </p>
               <a
                 href={`https://t.me/${NORMIE_TOKEN.telegram.replace("@", "")}`}
@@ -387,7 +393,8 @@ export function CommunityHub() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Follow for daily updates, burn announcements, and community spaces. Get chaotic with us!
+                Follow for daily updates, burn announcements, and community spaces. Get chaotic with
+                us!
               </p>
               <a
                 href={`https://x.com/${NORMIE_TOKEN.twitter.replace("@", "")}`}
@@ -408,12 +415,10 @@ export function CommunityHub() {
                 <h4 className="font-mono font-bold text-sm">Mission Statement</h4>
               </div>
               <blockquote className="text-sm text-muted-foreground italic border-l-2 border-primary pl-3">
-                "Relentless execution. Massive burns. Community raids. Merch empire. 
-                We're building a supply stranglehold that makes diamond hands look paper."
+                "Relentless execution. Massive burns. Community raids. Merch empire. We're building
+                a supply stranglehold that makes diamond hands look paper."
               </blockquote>
-              <p className="text-xs text-muted-foreground mt-3 text-right">
-                — @NormieCEO
-              </p>
+              <p className="text-xs text-muted-foreground mt-3 text-right">— @NormieCEO</p>
             </Card>
           </div>
         </div>

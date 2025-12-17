@@ -30,8 +30,13 @@ const PASSWORD_RESET_EXPIRY_HOURS = 1;
 router.post("/wallet/challenge", async (req: Request, res: Response) => {
   try {
     const { walletAddress } = req.body;
-    
-    if (!walletAddress || typeof walletAddress !== "string" || walletAddress.length < 32 || walletAddress.length > 44) {
+
+    if (
+      !walletAddress ||
+      typeof walletAddress !== "string" ||
+      walletAddress.length < 32 ||
+      walletAddress.length > 44
+    ) {
       res.status(400).json({ error: "Invalid wallet address" });
       return;
     }
@@ -76,18 +81,18 @@ router.post("/wallet/verify", async (req: Request, res: Response) => {
     await storage.markAuthChallengeUsed(authChallenge.id);
 
     let user = await storage.getUserByWallet(walletAddress);
-    
+
     if (!user) {
       const username = `normie_${walletAddress.slice(0, 8)}`;
       const role = determineRole(walletAddress);
-      
+
       user = await storage.createUser({
         walletAddress,
         username,
         role,
       });
     } else if (user.role !== "admin" && determineRole(walletAddress) === "admin") {
-      user = await storage.updateUser(user.id, { role: "admin" }) || user;
+      user = (await storage.updateUser(user.id, { role: "admin" })) || user;
     }
 
     const token = createJWT({
@@ -214,10 +219,7 @@ router.post(
 
 router.post(
   "/login",
-  [
-    body("email").isEmail().normalizeEmail(),
-    body("password").notEmpty(),
-  ],
+  [body("email").isEmail().normalizeEmail(), body("password").notEmpty()],
   async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
@@ -319,7 +321,7 @@ router.post(
       const { email } = req.body;
 
       const user = await storage.getUserByEmail(email);
-      
+
       res.json({ message: "If an account exists, a reset email has been sent" });
 
       if (!user) return;
@@ -335,7 +337,7 @@ router.post(
 
       if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL) {
         const resetLink = `${process.env.APP_URL || "https://normienation.replit.app"}/reset-password?token=${token}`;
-        
+
         await sgMail.send({
           to: email,
           from: process.env.SENDGRID_FROM_EMAIL,
@@ -533,7 +535,9 @@ router.post(
     body("newPassword")
       .isLength({ min: 8 })
       .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-      .withMessage("New password must be at least 8 characters with lowercase, uppercase, and number"),
+      .withMessage(
+        "New password must be at least 8 characters with lowercase, uppercase, and number"
+      ),
   ],
   async (req: AuthRequest, res: Response) => {
     try {

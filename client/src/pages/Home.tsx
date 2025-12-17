@@ -13,12 +13,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header
-        metrics={metrics}
-        isDark={isDark}
-        onToggleTheme={toggleTheme}
-      />
-      
+      <Header metrics={metrics} isDark={isDark} onToggleTheme={toggleTheme} />
+
       <main>
         <Dashboard
           metrics={metrics}
@@ -27,16 +23,16 @@ export default function Home() {
           isLoading={isLoading}
           isConnected={isConnected}
         />
-        
+
         <MemeGenerator />
-        
+
         <section className="max-w-7xl mx-auto px-4 py-8">
           <ArtGallery />
         </section>
-        
+
         <CommunityHub />
       </main>
-      
+
       <Footer />
     </div>
   );

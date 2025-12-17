@@ -33,29 +33,31 @@ const profileSchema = z.object({
     .max(50, "Username must be 50 characters or less")
     .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
   bio: z.string().max(500, "Bio must be 500 characters or less").optional().or(z.literal("")),
-  avatarUrl: z.string().refine(
-    (val) => val === "" || /^https?:\/\/.+/.test(val),
-    "Must be a valid URL or empty"
-  ).optional(),
+  avatarUrl: z
+    .string()
+    .refine((val) => val === "" || /^https?:\/\/.+/.test(val), "Must be a valid URL or empty")
+    .optional(),
   holdingsVisible: z.boolean(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-const passwordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain lowercase, uppercase, and number"
-    ),
-  confirmPassword: z.string(),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain lowercase, uppercase, and number"
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
@@ -134,7 +136,11 @@ export default function Profile() {
       toast({ title: "Password changed", description: "Your password has been updated" });
     },
     onError: (error: Error) => {
-      toast({ title: "Password change failed", description: error.message, variant: "destructive" });
+      toast({
+        title: "Password change failed",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -199,9 +205,7 @@ export default function Profile() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-bold">{user.username}</span>
-                  {user.role === "admin" && (
-                    <Shield className="h-4 w-4 text-primary" />
-                  )}
+                  {user.role === "admin" && <Shield className="h-4 w-4 text-primary" />}
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                   {hasWalletAuth && (
@@ -244,7 +248,9 @@ export default function Profile() {
                           data-testid="input-username"
                         />
                       </FormControl>
-                      <FormDescription>3-50 characters, letters, numbers, underscores only</FormDescription>
+                      <FormDescription>
+                        3-50 characters, letters, numbers, underscores only
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -298,7 +304,11 @@ export default function Profile() {
                     <FormItem className="flex items-center justify-between rounded-md border p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="flex items-center gap-2">
-                          {field.value ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                          {field.value ? (
+                            <Eye className="h-4 w-4" />
+                          ) : (
+                            <EyeOff className="h-4 w-4" />
+                          )}
                           Show Holdings
                         </FormLabel>
                         <FormDescription>
@@ -350,7 +360,10 @@ export default function Profile() {
                 </Button>
               ) : (
                 <Form {...passwordForm}>
-                  <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                    className="space-y-4"
+                  >
                     <FormField
                       control={passwordForm.control}
                       name="currentPassword"
@@ -376,13 +389,11 @@ export default function Profile() {
                         <FormItem>
                           <FormLabel>New Password</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              type="password"
-                              data-testid="input-new-password"
-                            />
+                            <Input {...field} type="password" data-testid="input-new-password" />
                           </FormControl>
-                          <FormDescription>8+ characters with lowercase, uppercase, and number</FormDescription>
+                          <FormDescription>
+                            8+ characters with lowercase, uppercase, and number
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

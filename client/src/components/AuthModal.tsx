@@ -3,13 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Wallet, Mail, User, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
-import { SiPhantom } from "react-icons/si";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,20 +16,27 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  username: z.string()
-    .min(3, "Username must be at least 3 characters")
-    .max(50, "Username must be less than 50 characters")
-    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain lowercase, uppercase, and a number"),
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const registerSchema = z
+  .object({
+    email: z.string().email("Invalid email address"),
+    username: z
+      .string()
+      .min(3, "Username must be at least 3 characters")
+      .max(50, "Username must be less than 50 characters")
+      .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain lowercase, uppercase, and a number"
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 const resetSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -128,9 +129,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-background border-border">
         <DialogHeader>
-          <DialogTitle className="font-mono text-xl text-center">
-            Normie Nation
-          </DialogTitle>
+          <DialogTitle className="font-mono text-xl text-center">Normie Nation</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -194,7 +193,9 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
             <TabsContent value="login" className="space-y-4">
               <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-3">
                 <div className="space-y-1">
-                  <Label htmlFor="login-email" className="font-mono text-xs">Email</Label>
+                  <Label htmlFor="login-email" className="font-mono text-xs">
+                    Email
+                  </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -207,12 +208,16 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                     />
                   </div>
                   {loginForm.formState.errors.email && (
-                    <p className="text-xs text-destructive">{loginForm.formState.errors.email.message}</p>
+                    <p className="text-xs text-destructive">
+                      {loginForm.formState.errors.email.message}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="login-password" className="font-mono text-xs">Password</Label>
+                  <Label htmlFor="login-password" className="font-mono text-xs">
+                    Password
+                  </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -232,7 +237,9 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                     </button>
                   </div>
                   {loginForm.formState.errors.password && (
-                    <p className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>
+                    <p className="text-xs text-destructive">
+                      {loginForm.formState.errors.password.message}
+                    </p>
                   )}
                 </div>
 
@@ -260,7 +267,9 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
             <TabsContent value="register" className="space-y-4">
               <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-3">
                 <div className="space-y-1">
-                  <Label htmlFor="register-username" className="font-mono text-xs">Username</Label>
+                  <Label htmlFor="register-username" className="font-mono text-xs">
+                    Username
+                  </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -272,12 +281,16 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                     />
                   </div>
                   {registerForm.formState.errors.username && (
-                    <p className="text-xs text-destructive">{registerForm.formState.errors.username.message}</p>
+                    <p className="text-xs text-destructive">
+                      {registerForm.formState.errors.username.message}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="register-email" className="font-mono text-xs">Email</Label>
+                  <Label htmlFor="register-email" className="font-mono text-xs">
+                    Email
+                  </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -290,12 +303,16 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                     />
                   </div>
                   {registerForm.formState.errors.email && (
-                    <p className="text-xs text-destructive">{registerForm.formState.errors.email.message}</p>
+                    <p className="text-xs text-destructive">
+                      {registerForm.formState.errors.email.message}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="register-password" className="font-mono text-xs">Password</Label>
+                  <Label htmlFor="register-password" className="font-mono text-xs">
+                    Password
+                  </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -315,12 +332,16 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                     </button>
                   </div>
                   {registerForm.formState.errors.password && (
-                    <p className="text-xs text-destructive">{registerForm.formState.errors.password.message}</p>
+                    <p className="text-xs text-destructive">
+                      {registerForm.formState.errors.password.message}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="register-confirm" className="font-mono text-xs">Confirm Password</Label>
+                  <Label htmlFor="register-confirm" className="font-mono text-xs">
+                    Confirm Password
+                  </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -333,7 +354,9 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                     />
                   </div>
                   {registerForm.formState.errors.confirmPassword && (
-                    <p className="text-xs text-destructive">{registerForm.formState.errors.confirmPassword.message}</p>
+                    <p className="text-xs text-destructive">
+                      {registerForm.formState.errors.confirmPassword.message}
+                    </p>
                   )}
                 </div>
 
@@ -356,7 +379,9 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 </p>
                 <form onSubmit={resetForm.handleSubmit(handleReset)} className="space-y-3">
                   <div className="space-y-1">
-                    <Label htmlFor="reset-email" className="font-mono text-xs">Email</Label>
+                    <Label htmlFor="reset-email" className="font-mono text-xs">
+                      Email
+                    </Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -369,7 +394,9 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                       />
                     </div>
                     {resetForm.formState.errors.email && (
-                      <p className="text-xs text-destructive">{resetForm.formState.errors.email.message}</p>
+                      <p className="text-xs text-destructive">
+                        {resetForm.formState.errors.email.message}
+                      </p>
                     )}
                   </div>
 

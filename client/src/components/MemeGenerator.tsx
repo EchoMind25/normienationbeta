@@ -7,7 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Upload,
@@ -154,13 +160,15 @@ interface CanvasState {
 export function MemeGenerator() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(null);
   const [backgroundColor, setBackgroundColor] = useState("#1a1a1a");
   const [gradientColors, setGradientColors] = useState<string[] | null>(null);
   const [textElements, setTextElements] = useState<TextElement[]>([]);
   const [stickerElements, setStickerElements] = useState<StickerElement[]>([]);
-  const [loadedStickerImages, setLoadedStickerImages] = useState<Map<string, HTMLImageElement>>(new Map());
+  const [loadedStickerImages, setLoadedStickerImages] = useState<Map<string, HTMLImageElement>>(
+    new Map()
+  );
   const [newText, setNewText] = useState("");
   const [textColor, setTextColor] = useState("#FFFFFF");
   const [fontSize, setFontSize] = useState([40]);
@@ -173,37 +181,54 @@ export function MemeGenerator() {
   const [shadowBlur, setShadowBlur] = useState([5]);
   const [emojiSize, setEmojiSize] = useState([60]);
   const [stickerSize, setStickerSize] = useState([1.5]);
-  const [draggedElement, setDraggedElement] = useState<{ type: "text" | "sticker"; id: string } | null>(null);
-  const [selectedElement, setSelectedElement] = useState<{ type: "text" | "sticker"; id: string } | null>(null);
+  const [draggedElement, setDraggedElement] = useState<{
+    type: "text" | "sticker";
+    id: string;
+  } | null>(null);
+  const [selectedElement, setSelectedElement] = useState<{
+    type: "text" | "sticker";
+    id: string;
+  } | null>(null);
   const [stickerCategory, setStickerCategory] = useState<"normie" | "crypto" | "brand">("normie");
   const [bgMode, setBgMode] = useState<"solid" | "gradient" | "pattern">("solid");
   const [textAlign, setTextAlign] = useState<"left" | "center" | "right">("center");
   const [patternId, setPatternId] = useState<string | null>(null);
-  
+
   const [history, setHistory] = useState<CanvasState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
-  const saveToHistory = useCallback((
-    newTextElements?: TextElement[],
-    newStickerElements?: StickerElement[],
-    newBackgroundColor?: string,
-    newGradientColors?: string[] | null,
-    newPatternId?: string | null
-  ) => {
-    const state: CanvasState = {
-      textElements: [...(newTextElements ?? textElements)],
-      stickerElements: [...(newStickerElements ?? stickerElements)],
-      backgroundColor: newBackgroundColor ?? backgroundColor,
-      gradientColors: newGradientColors !== undefined ? newGradientColors : gradientColors,
-      patternId: newPatternId !== undefined ? newPatternId : patternId,
-    };
-    
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(state);
-    if (newHistory.length > 20) newHistory.shift();
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [textElements, stickerElements, backgroundColor, gradientColors, patternId, history, historyIndex]);
+  const saveToHistory = useCallback(
+    (
+      newTextElements?: TextElement[],
+      newStickerElements?: StickerElement[],
+      newBackgroundColor?: string,
+      newGradientColors?: string[] | null,
+      newPatternId?: string | null
+    ) => {
+      const state: CanvasState = {
+        textElements: [...(newTextElements ?? textElements)],
+        stickerElements: [...(newStickerElements ?? stickerElements)],
+        backgroundColor: newBackgroundColor ?? backgroundColor,
+        gradientColors: newGradientColors !== undefined ? newGradientColors : gradientColors,
+        patternId: newPatternId !== undefined ? newPatternId : patternId,
+      };
+
+      const newHistory = history.slice(0, historyIndex + 1);
+      newHistory.push(state);
+      if (newHistory.length > 20) newHistory.shift();
+      setHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
+    },
+    [
+      textElements,
+      stickerElements,
+      backgroundColor,
+      gradientColors,
+      patternId,
+      history,
+      historyIndex,
+    ]
+  );
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -229,76 +254,79 @@ export function MemeGenerator() {
     }
   }, [history, historyIndex]);
 
-  const drawPattern = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number, pattern: string) => {
-    ctx.fillStyle = "#1a1a1a";
-    ctx.fillRect(0, 0, width, height);
-    ctx.strokeStyle = "rgba(34, 197, 94, 0.3)";
-    ctx.fillStyle = "rgba(34, 197, 94, 0.3)";
-    
-    switch (pattern) {
-      case "grid":
-        for (let x = 0; x <= width; x += 30) {
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, height);
-          ctx.stroke();
-        }
-        for (let y = 0; y <= height; y += 30) {
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(width, y);
-          ctx.stroke();
-        }
-        break;
-      case "checkerboard":
-        for (let x = 0; x < width; x += 40) {
-          for (let y = 0; y < height; y += 40) {
-            if ((x / 40 + y / 40) % 2 === 0) {
-              ctx.fillRect(x, y, 40, 40);
+  const drawPattern = useCallback(
+    (ctx: CanvasRenderingContext2D, width: number, height: number, pattern: string) => {
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(0, 0, width, height);
+      ctx.strokeStyle = "rgba(34, 197, 94, 0.3)";
+      ctx.fillStyle = "rgba(34, 197, 94, 0.3)";
+
+      switch (pattern) {
+        case "grid":
+          for (let x = 0; x <= width; x += 30) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+          }
+          for (let y = 0; y <= height; y += 30) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(width, y);
+            ctx.stroke();
+          }
+          break;
+        case "checkerboard":
+          for (let x = 0; x < width; x += 40) {
+            for (let y = 0; y < height; y += 40) {
+              if ((x / 40 + y / 40) % 2 === 0) {
+                ctx.fillRect(x, y, 40, 40);
+              }
             }
           }
-        }
-        break;
-      case "diagonal":
-        for (let i = -height; i < width + height; i += 20) {
-          ctx.beginPath();
-          ctx.moveTo(i, 0);
-          ctx.lineTo(i + height, height);
-          ctx.stroke();
-        }
-        break;
-      case "dots":
-        for (let x = 20; x < width; x += 40) {
-          for (let y = 20; y < height; y += 40) {
+          break;
+        case "diagonal":
+          for (let i = -height; i < width + height; i += 20) {
             ctx.beginPath();
-            ctx.arc(x, y, 4, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i + height, height);
+            ctx.stroke();
           }
-        }
-        break;
-      case "stars":
-        ctx.font = "20px serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        for (let x = 30; x < width; x += 60) {
-          for (let y = 30; y < height; y += 60) {
-            ctx.fillText("*", x, y);
+          break;
+        case "dots":
+          for (let x = 20; x < width; x += 40) {
+            for (let y = 20; y < height; y += 40) {
+              ctx.beginPath();
+              ctx.arc(x, y, 4, 0, Math.PI * 2);
+              ctx.fill();
+            }
           }
-        }
-        break;
-      case "binary":
-        ctx.font = "10px monospace";
-        ctx.textAlign = "left";
-        for (let y = 10; y < height; y += 14) {
-          let line = "";
-          for (let x = 0; x < width / 6; x++) {
-            line += Math.random() > 0.5 ? "1" : "0";
+          break;
+        case "stars":
+          ctx.font = "20px serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          for (let x = 30; x < width; x += 60) {
+            for (let y = 30; y < height; y += 60) {
+              ctx.fillText("*", x, y);
+            }
           }
-          ctx.fillText(line, 2, y);
-        }
-        break;
-    }
-  }, []);
+          break;
+        case "binary":
+          ctx.font = "10px monospace";
+          ctx.textAlign = "left";
+          for (let y = 10; y < height; y += 14) {
+            let line = "";
+            for (let x = 0; x < width / 6; x++) {
+              line += Math.random() > 0.5 ? "1" : "0";
+            }
+            ctx.fillText(line, 2, y);
+          }
+          break;
+      }
+    },
+    []
+  );
 
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -310,10 +338,19 @@ export function MemeGenerator() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (backgroundImage) {
-      const scale = Math.min(canvas.width / backgroundImage.width, canvas.height / backgroundImage.height);
+      const scale = Math.min(
+        canvas.width / backgroundImage.width,
+        canvas.height / backgroundImage.height
+      );
       const x = (canvas.width - backgroundImage.width * scale) / 2;
       const y = (canvas.height - backgroundImage.height * scale) / 2;
-      ctx.drawImage(backgroundImage, x, y, backgroundImage.width * scale, backgroundImage.height * scale);
+      ctx.drawImage(
+        backgroundImage,
+        x,
+        y,
+        backgroundImage.width * scale,
+        backgroundImage.height * scale
+      );
     } else if (patternId) {
       drawPattern(ctx, canvas.width, canvas.height, patternId);
     } else if (gradientColors) {
@@ -338,7 +375,7 @@ export function MemeGenerator() {
       ctx.save();
       ctx.translate(sticker.x, sticker.y);
       ctx.scale(sticker.scale, sticker.scale);
-      
+
       if (sticker.type === "emoji") {
         ctx.font = "48px serif";
         ctx.textAlign = "center";
@@ -357,7 +394,7 @@ export function MemeGenerator() {
           ctx.fillText("Loading...", 0, 0);
         }
       }
-      
+
       ctx.restore();
     });
 
@@ -366,20 +403,20 @@ export function MemeGenerator() {
       ctx.font = `bold ${text.fontSize}px ${text.font}`;
       ctx.textAlign = text.align;
       ctx.textBaseline = "middle";
-      
+
       if (text.shadowEnabled) {
         ctx.shadowColor = text.shadowColor;
         ctx.shadowBlur = text.shadowBlur;
         ctx.shadowOffsetX = 3;
         ctx.shadowOffsetY = 3;
       }
-      
+
       if (text.strokeEnabled) {
         ctx.strokeStyle = text.strokeColor;
         ctx.lineWidth = text.strokeWidth;
         ctx.strokeText(text.text, text.x, text.y);
       }
-      
+
       ctx.fillStyle = text.color;
       ctx.fillText(text.text, text.x, text.y);
       ctx.restore();
@@ -389,7 +426,16 @@ export function MemeGenerator() {
     ctx.fillStyle = "rgba(34, 197, 94, 0.4)";
     ctx.textAlign = "right";
     ctx.fillText("$NORMIE", canvas.width - 10, canvas.height - 10);
-  }, [backgroundImage, backgroundColor, gradientColors, patternId, textElements, stickerElements, drawPattern, loadedStickerImages]);
+  }, [
+    backgroundImage,
+    backgroundColor,
+    gradientColors,
+    patternId,
+    textElements,
+    stickerElements,
+    drawPattern,
+    loadedStickerImages,
+  ]);
 
   useEffect(() => {
     drawCanvas();
@@ -430,13 +476,13 @@ export function MemeGenerator() {
 
   const deleteSelectedElement = useCallback(() => {
     if (!selectedElement) return;
-    
+
     if (selectedElement.type === "text") {
-      const newTextElements = textElements.filter(t => t.id !== selectedElement.id);
+      const newTextElements = textElements.filter((t) => t.id !== selectedElement.id);
       setTextElements(newTextElements);
       saveToHistory(newTextElements, stickerElements);
     } else {
-      const newStickerElements = stickerElements.filter(s => s.id !== selectedElement.id);
+      const newStickerElements = stickerElements.filter((s) => s.id !== selectedElement.id);
       setStickerElements(newStickerElements);
       saveToHistory(textElements, newStickerElements);
     }
@@ -454,13 +500,17 @@ export function MemeGenerator() {
         redo();
       }
       if (e.key === "Delete" || e.key === "Backspace") {
-        if (selectedElement && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        if (
+          selectedElement &&
+          document.activeElement?.tagName !== "INPUT" &&
+          document.activeElement?.tagName !== "TEXTAREA"
+        ) {
           e.preventDefault();
           deleteSelectedElement();
         }
       }
     };
-    
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [undo, redo, selectedElement, deleteSelectedElement]);
@@ -571,7 +621,7 @@ export function MemeGenerator() {
         const metrics = ctx.measureText(text.text);
         const width = metrics.width;
         const height = text.fontSize;
-        
+
         if (
           x >= text.x - width / 2 &&
           x <= text.x + width / 2 &&
@@ -584,7 +634,7 @@ export function MemeGenerator() {
         }
       }
     }
-    
+
     setSelectedElement(null);
   };
 
@@ -601,16 +651,10 @@ export function MemeGenerator() {
     const y = (e.clientY - rect.top) * scaleY;
 
     if (draggedElement.type === "text") {
-      setTextElements(
-        textElements.map((t) =>
-          t.id === draggedElement.id ? { ...t, x, y } : t
-        )
-      );
+      setTextElements(textElements.map((t) => (t.id === draggedElement.id ? { ...t, x, y } : t)));
     } else {
       setStickerElements(
-        stickerElements.map((s) =>
-          s.id === draggedElement.id ? { ...s, x, y } : s
-        )
+        stickerElements.map((s) => (s.id === draggedElement.id ? { ...s, x, y } : s))
       );
     }
   };
@@ -654,9 +698,12 @@ export function MemeGenerator() {
 
   const getStickersByCategory = () => {
     switch (stickerCategory) {
-      case "crypto": return CRYPTO_STICKERS;
-      case "brand": return BRAND_STICKERS;
-      default: return NORMIE_STICKERS;
+      case "crypto":
+        return CRYPTO_STICKERS;
+      case "brand":
+        return BRAND_STICKERS;
+      default:
+        return NORMIE_STICKERS;
     }
   };
 
@@ -728,11 +775,7 @@ export function MemeGenerator() {
                     <SiX className="h-4 w-4 mr-1" />
                     Share
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={downloadMeme}
-                    data-testid="button-download-meme"
-                  >
+                  <Button size="sm" onClick={downloadMeme} data-testid="button-download-meme">
                     <Download className="h-4 w-4 mr-1" />
                     Download
                   </Button>
@@ -1165,7 +1208,13 @@ export function MemeGenerator() {
                                   setGradientColors(null);
                                   setPatternId(null);
                                   setBackgroundImage(null);
-                                  saveToHistory(textElements, stickerElements, color.hex, null, null);
+                                  saveToHistory(
+                                    textElements,
+                                    stickerElements,
+                                    color.hex,
+                                    null,
+                                    null
+                                  );
                                 }}
                                 title={color.name}
                                 data-testid={`button-bg-color-${color.hex}`}
@@ -1209,7 +1258,13 @@ export function MemeGenerator() {
                                   setGradientColors(gradient.colors);
                                   setPatternId(null);
                                   setBackgroundImage(null);
-                                  saveToHistory(textElements, stickerElements, backgroundColor, gradient.colors, null);
+                                  saveToHistory(
+                                    textElements,
+                                    stickerElements,
+                                    backgroundColor,
+                                    gradient.colors,
+                                    null
+                                  );
                                 }}
                                 data-testid={`button-gradient-${gradient.name}`}
                               >
@@ -1238,7 +1293,13 @@ export function MemeGenerator() {
                                   setPatternId(pattern.id);
                                   setGradientColors(null);
                                   setBackgroundImage(null);
-                                  saveToHistory(textElements, stickerElements, backgroundColor, null, pattern.id);
+                                  saveToHistory(
+                                    textElements,
+                                    stickerElements,
+                                    backgroundColor,
+                                    null,
+                                    pattern.id
+                                  );
                                 }}
                                 data-testid={`button-pattern-${pattern.id}`}
                               >
@@ -1267,7 +1328,9 @@ export function MemeGenerator() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => {
-                                    const newStickerElements = stickerElements.filter((s) => s.id !== sticker.id);
+                                    const newStickerElements = stickerElements.filter(
+                                      (s) => s.id !== sticker.id
+                                    );
                                     setStickerElements(newStickerElements);
                                     saveToHistory(textElements, newStickerElements);
                                   }}

@@ -7,7 +7,7 @@ export function useWebSocket() {
   const [devBuys, setDevBuys] = useState<DevBuy[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const mountedRef = useRef(true);
   const hasReceivedDataRef = useRef(false);
 
@@ -23,7 +23,7 @@ export function useWebSocket() {
         return;
       }
       if (!response.ok) throw new Error("Failed to fetch metrics");
-      
+
       const data = await response.json();
       console.log("[NORMIE] Got metrics:", data.price, data.marketCap, data.lastUpdated);
       if (mountedRef.current) {
@@ -48,7 +48,7 @@ export function useWebSocket() {
       });
       if (response.status === 304) return;
       if (!response.ok) throw new Error("Failed to fetch price history");
-      
+
       const data = await response.json();
       if (mountedRef.current && Array.isArray(data) && data.length > 0) {
         hasReceivedDataRef.current = true;
@@ -67,7 +67,7 @@ export function useWebSocket() {
       });
       if (response.status === 304) return;
       if (!response.ok) throw new Error("Failed to fetch dev buys");
-      
+
       const data = await response.json();
       if (mountedRef.current && Array.isArray(data)) {
         setDevBuys(data);
@@ -79,15 +79,15 @@ export function useWebSocket() {
 
   useEffect(() => {
     mountedRef.current = true;
-    
+
     fetchMetrics();
     fetchPriceHistory();
     fetchDevBuys();
-    
+
     const metricsInterval = setInterval(fetchMetrics, 5000);
     const historyInterval = setInterval(fetchPriceHistory, 30000);
     const devBuysInterval = setInterval(fetchDevBuys, 60000);
-    
+
     const fallbackTimer = setTimeout(() => {
       if (!hasReceivedDataRef.current && mountedRef.current) {
         setIsLoading(false);

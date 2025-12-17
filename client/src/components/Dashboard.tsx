@@ -60,7 +60,14 @@ interface StatCardProps {
   isLoading?: boolean;
 }
 
-function StatCard({ title, value, change, icon, color = "text-primary", isLoading }: StatCardProps) {
+function StatCard({
+  title,
+  value,
+  change,
+  icon,
+  color = "text-primary",
+  isLoading,
+}: StatCardProps) {
   const [isPulsing, setIsPulsing] = useState(false);
   const prevValue = useRef(value);
 
@@ -106,9 +113,7 @@ function StatCard({ title, value, change, icon, color = "text-primary", isLoadin
                 <TrendingDown className="h-3 w-3 text-destructive" />
               )}
               <span
-                className={`text-xs font-mono ${
-                  change >= 0 ? "text-chart-1" : "text-destructive"
-                }`}
+                className={`text-xs font-mono ${change >= 0 ? "text-chart-1" : "text-destructive"}`}
               >
                 {change >= 0 ? "+" : ""}
                 {change.toFixed(2)}%
@@ -131,7 +136,13 @@ const TIME_RANGES = [
   { id: "7d", label: "7d", description: "Last 7 days" },
 ];
 
-export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnected }: DashboardProps) {
+export function Dashboard({
+  metrics,
+  priceHistory,
+  devBuys,
+  isLoading,
+  isConnected,
+}: DashboardProps) {
   const [timeRange, setTimeRange] = useState("1h");
   const [chartData, setChartData] = useState<PricePoint[]>([]);
   const [isLoadingChart, setIsLoadingChart] = useState(false);
@@ -142,7 +153,7 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
         setChartData(priceHistory);
         return;
       }
-      
+
       setIsLoadingChart(true);
       try {
         const response = await fetch(`/api/price-history?range=${timeRange}`);
@@ -157,7 +168,7 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
         setIsLoadingChart(false);
       }
     };
-    
+
     fetchChartData();
   }, [timeRange, priceHistory]);
 
@@ -191,16 +202,20 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
     } else if (timeRange === "24h" || timeRange === "6h") {
       return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
     }
-    return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
   };
 
   const devBuyPoints = (() => {
     const result: (number | null)[] = new Array(chartData.length).fill(null);
-    
+
     devBuys.forEach((buy) => {
       let closestIndex = -1;
       let closestDiff = Infinity;
-      
+
       chartData.forEach((p, index) => {
         const diff = Math.abs(buy.timestamp - p.timestamp);
         if (diff < closestDiff) {
@@ -208,12 +223,12 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
           closestIndex = index;
         }
       });
-      
+
       if (closestIndex !== -1 && closestDiff < 60 * 60 * 1000) {
         result[closestIndex] = buy.price;
       }
     });
-    
+
     return result;
   })();
 
@@ -298,28 +313,16 @@ export function Dashboard({ metrics, priceHistory, devBuys, isLoading, isConnect
     },
   };
 
-  const totalRemoved = metrics
-    ? metrics.burnedTokens + metrics.lockedTokens
-    : 0;
-  const strangleholdProgress = metrics
-    ? (totalRemoved / metrics.totalSupply) * 100
-    : 0;
+  const totalRemoved = metrics ? metrics.burnedTokens + metrics.lockedTokens : 0;
+  const strangleholdProgress = metrics ? (totalRemoved / metrics.totalSupply) * 100 : 0;
 
   const supplyData = metrics
     ? {
         labels: ["Circulating", "Burned", "Locked"],
         datasets: [
           {
-            data: [
-              metrics.circulatingSupply,
-              metrics.burnedTokens,
-              metrics.lockedTokens,
-            ],
-            backgroundColor: [
-              "hsl(142 72% 45%)",
-              "hsl(0 72% 50%)",
-              "hsl(45 90% 50%)",
-            ],
+            data: [metrics.circulatingSupply, metrics.burnedTokens, metrics.lockedTokens],
+            backgroundColor: ["hsl(142 72% 45%)", "hsl(0 72% 50%)", "hsl(45 90% 50%)"],
             borderColor: ["transparent", "transparent", "transparent"],
             borderWidth: 0,
           },

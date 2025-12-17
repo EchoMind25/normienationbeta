@@ -7,29 +7,35 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Image, 
-  Upload, 
-  ThumbsUp, 
-  ThumbsDown, 
-  Eye, 
-  MessageSquare, 
-  Star, 
+import {
+  Image,
+  Upload,
+  ThumbsUp,
+  ThumbsDown,
+  Eye,
+  MessageSquare,
+  Star,
   Send,
   Loader2,
   Sparkles,
   Grid3X3,
-  Trophy
+  Trophy,
 } from "lucide-react";
 import type { GalleryItem, GalleryComment } from "@shared/schema";
 
 function getVisitorId(): string {
   let visitorId = localStorage.getItem("normie_visitor_id");
   if (!visitorId) {
-    visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     localStorage.setItem("normie_visitor_id", visitorId);
   }
   return visitorId;
@@ -43,10 +49,11 @@ interface GalleryCardProps {
 
 function GalleryCard({ item, onVote, onViewDetails }: GalleryCardProps) {
   const score = (item.upvotes || 0) - (item.downvotes || 0);
-  const scoreColor = score > 0 ? "text-green-400" : score < 0 ? "text-red-400" : "text-muted-foreground";
-  
+  const scoreColor =
+    score > 0 ? "text-green-400" : score < 0 ? "text-red-400" : "text-muted-foreground";
+
   return (
-    <Card 
+    <Card
       className="overflow-hidden hover-elevate cursor-pointer group"
       onClick={() => onViewDetails(item)}
       data-testid={`card-gallery-${item.id}`}
@@ -66,20 +73,22 @@ function GalleryCard({ item, onVote, onViewDetails }: GalleryCardProps) {
         )}
       </div>
       <CardContent className="p-3">
-        <h3 className="font-mono font-semibold text-sm truncate mb-1" data-testid={`text-gallery-title-${item.id}`}>
+        <h3
+          className="font-mono font-semibold text-sm truncate mb-1"
+          data-testid={`text-gallery-title-${item.id}`}
+        >
           {item.title}
         </h3>
         <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span className="font-mono truncate">
-            {item.creatorName || "Anonymous"}
-          </span>
+          <span className="font-mono truncate">{item.creatorName || "Anonymous"}</span>
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="flex items-center gap-1">
               <Eye className="w-3 h-3" />
               {item.views || 0}
             </span>
             <span className={`flex items-center gap-1 font-bold ${scoreColor}`}>
-              {score > 0 ? "+" : ""}{score}
+              {score > 0 ? "+" : ""}
+              {score}
             </span>
           </div>
         </div>
@@ -123,14 +132,20 @@ function UploadForm({ onSuccess }: UploadFormProps) {
   const { toast } = useToast();
 
   const uploadMutation = useMutation({
-    mutationFn: async (data: { title: string; description: string; imageUrl: string; creatorName: string; tags: string[] }) => {
-      return apiRequest("/api/gallery", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+    mutationFn: async (data: {
+      title: string;
+      description: string;
+      imageUrl: string;
+      creatorName: string;
+      tags: string[];
+    }) => {
+      return apiRequest("POST", "/api/gallery", data);
     },
     onSuccess: () => {
-      toast({ title: "Artwork Submitted", description: "Your artwork has been submitted for review." });
+      toast({
+        title: "Artwork Submitted",
+        description: "Your artwork has been submitted for review.",
+      });
       setTitle("");
       setDescription("");
       setImageUrl("");
@@ -146,7 +161,11 @@ function UploadForm({ onSuccess }: UploadFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !imageUrl) {
-      toast({ title: "Error", description: "Title and image URL are required.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Title and image URL are required.",
+        variant: "destructive",
+      });
       return;
     }
     uploadMutation.mutate({
@@ -154,7 +173,10 @@ function UploadForm({ onSuccess }: UploadFormProps) {
       description,
       imageUrl,
       creatorName: creatorName || "Anonymous",
-      tags: tags.split(",").map(t => t.trim()).filter(Boolean),
+      tags: tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
     });
   };
 
@@ -181,9 +203,7 @@ function UploadForm({ onSuccess }: UploadFormProps) {
           className="font-mono"
           data-testid="input-gallery-image-url"
         />
-        <p className="text-xs text-muted-foreground mt-1">
-          Paste a direct link to your meme image
-        </p>
+        <p className="text-xs text-muted-foreground mt-1">Paste a direct link to your meme image</p>
       </div>
       <div>
         <Label htmlFor="creatorName">Your Name</Label>
@@ -219,9 +239,9 @@ function UploadForm({ onSuccess }: UploadFormProps) {
           data-testid="input-gallery-tags"
         />
       </div>
-      <Button 
-        type="submit" 
-        className="w-full" 
+      <Button
+        type="submit"
+        className="w-full"
         disabled={uploadMutation.isPending}
         data-testid="button-submit-gallery"
       >
@@ -253,10 +273,7 @@ function ItemDetails({ item, onClose }: ItemDetailsProps) {
 
   const commentMutation = useMutation({
     mutationFn: async (data: { content: string; visitorName: string }) => {
-      return apiRequest(`/api/gallery/${item.id}/comments`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", `/api/gallery/${item.id}/comments`, data);
     },
     onSuccess: () => {
       setNewComment("");
@@ -293,7 +310,7 @@ function ItemDetails({ item, onClose }: ItemDetailsProps) {
           </Badge>
         )}
       </div>
-      
+
       <div className="mt-4 space-y-4">
         <div>
           <h2 className="text-xl font-mono font-bold">{item.title}</h2>
@@ -301,11 +318,9 @@ function ItemDetails({ item, onClose }: ItemDetailsProps) {
             by {item.creatorName || "Anonymous"}
           </p>
         </div>
-        
-        {item.description && (
-          <p className="text-sm text-muted-foreground">{item.description}</p>
-        )}
-        
+
+        {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
+
         <div className="flex items-center gap-4 text-sm">
           <span className="flex items-center gap-1">
             <Eye className="w-4 h-4" />
@@ -320,10 +335,11 @@ function ItemDetails({ item, onClose }: ItemDetailsProps) {
             {item.downvotes || 0}
           </span>
           <span className="font-bold">
-            Score: {score > 0 ? "+" : ""}{score}
+            Score: {score > 0 ? "+" : ""}
+            {score}
           </span>
         </div>
-        
+
         {item.tags && item.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {item.tags.map((tag, i) => (
@@ -333,13 +349,13 @@ function ItemDetails({ item, onClose }: ItemDetailsProps) {
             ))}
           </div>
         )}
-        
+
         <div className="border-t pt-4">
           <h3 className="font-mono font-semibold mb-3 flex items-center gap-2">
             <MessageSquare className="w-4 h-4" />
             Comments ({comments.length})
           </h3>
-          
+
           <form onSubmit={handleSubmitComment} className="flex gap-2 mb-4">
             <Input
               value={commentName}
@@ -355,16 +371,16 @@ function ItemDetails({ item, onClose }: ItemDetailsProps) {
               className="flex-1 font-mono text-sm"
               data-testid="input-comment-content"
             />
-            <Button 
-              type="submit" 
-              size="icon" 
+            <Button
+              type="submit"
+              size="icon"
               disabled={commentMutation.isPending}
               data-testid="button-submit-comment"
             >
               <Send className="w-4 h-4" />
             </Button>
           </form>
-          
+
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {comments.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
@@ -372,8 +388,8 @@ function ItemDetails({ item, onClose }: ItemDetailsProps) {
               </p>
             ) : (
               comments.map((comment) => (
-                <div 
-                  key={comment.id} 
+                <div
+                  key={comment.id}
                   className="bg-muted/30 rounded p-2 text-sm"
                   data-testid={`text-comment-${comment.id}`}
                 >
@@ -403,7 +419,11 @@ export function ArtGallery() {
   const { toast } = useToast();
   const visitorId = getVisitorId();
 
-  const { data: allItems = [], isLoading, refetch } = useQuery<GalleryItem[]>({
+  const {
+    data: allItems = [],
+    isLoading,
+    refetch,
+  } = useQuery<GalleryItem[]>({
     queryKey: ["/api/gallery"],
   });
 
@@ -413,10 +433,7 @@ export function ArtGallery() {
 
   const voteMutation = useMutation({
     mutationFn: async ({ id, voteType }: { id: string; voteType: "up" | "down" }) => {
-      return apiRequest(`/api/gallery/${id}/vote`, {
-        method: "POST",
-        body: JSON.stringify({ voteType, visitorId }),
-      });
+      return apiRequest("POST", `/api/gallery/${id}/vote`, { voteType, visitorId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
@@ -430,11 +447,15 @@ export function ArtGallery() {
     voteMutation.mutate({ id, voteType });
   };
 
-  const displayItems = activeTab === "featured" 
-    ? featuredItems 
-    : activeTab === "top"
-    ? [...allItems].sort((a, b) => ((b.upvotes || 0) - (b.downvotes || 0)) - ((a.upvotes || 0) - (a.downvotes || 0)))
-    : allItems;
+  const displayItems =
+    activeTab === "featured"
+      ? featuredItems
+      : activeTab === "top"
+        ? [...allItems].sort(
+            (a, b) =>
+              (b.upvotes || 0) - (b.downvotes || 0) - ((a.upvotes || 0) - (a.downvotes || 0))
+          )
+        : allItems;
 
   return (
     <Card className="h-full flex flex-col">
@@ -455,10 +476,12 @@ export function ArtGallery() {
               <DialogHeader>
                 <DialogTitle className="font-mono">Submit Your Artwork</DialogTitle>
               </DialogHeader>
-              <UploadForm onSuccess={() => {
-                setUploadOpen(false);
-                refetch();
-              }} />
+              <UploadForm
+                onSuccess={() => {
+                  setUploadOpen(false);
+                  refetch();
+                }}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -470,7 +493,11 @@ export function ArtGallery() {
               <Grid3X3 className="w-3 h-3 mr-1" />
               All
             </TabsTrigger>
-            <TabsTrigger value="featured" className="font-mono text-xs" data-testid="tab-gallery-featured">
+            <TabsTrigger
+              value="featured"
+              className="font-mono text-xs"
+              data-testid="tab-gallery-featured"
+            >
               <Sparkles className="w-3 h-3 mr-1" />
               Featured
             </TabsTrigger>
@@ -479,7 +506,7 @@ export function ArtGallery() {
               Top Rated
             </TabsTrigger>
           </TabsList>
-          
+
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center h-48">
@@ -506,7 +533,7 @@ export function ArtGallery() {
           </div>
         </Tabs>
       </CardContent>
-      
+
       <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>

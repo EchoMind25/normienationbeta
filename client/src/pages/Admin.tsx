@@ -9,7 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Users, Shield, AlertTriangle, Activity, Settings, Plus, Trash2, TrendingUp, Calendar } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  Shield,
+  AlertTriangle,
+  Activity,
+  Settings,
+  Plus,
+  Trash2,
+  TrendingUp,
+  Calendar,
+} from "lucide-react";
 
 interface ManualDevBuy {
   id: string;
@@ -24,7 +35,7 @@ export default function Admin() {
   const [, setLocation] = useLocation();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
-  
+
   const [timestamp, setTimestamp] = useState("");
   const [amount, setAmount] = useState("");
   const [price, setPrice] = useState("");
@@ -36,7 +47,12 @@ export default function Admin() {
   });
 
   const addDevBuyMutation = useMutation({
-    mutationFn: async (data: { timestamp: string; amount: number; price: number; label?: string }) => {
+    mutationFn: async (data: {
+      timestamp: string;
+      amount: number;
+      price: number;
+      label?: string;
+    }) => {
       const res = await apiRequest("POST", "/api/admin/dev-buys", data);
       if (!res.ok) throw new Error("Failed to add dev buy");
       return res.json();
@@ -74,7 +90,11 @@ export default function Admin() {
   const handleAddDevBuy = (e: React.FormEvent) => {
     e.preventDefault();
     if (!timestamp || !amount || !price) {
-      toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
       return;
     }
     addDevBuyMutation.mutate({
@@ -115,7 +135,9 @@ export default function Admin() {
               <Shield className="h-6 w-6 text-primary" />
               Admin Dashboard
             </h1>
-            <p className="text-muted-foreground text-sm">Manage users and monitor platform activity</p>
+            <p className="text-muted-foreground text-sm">
+              Manage users and monitor platform activity
+            </p>
           </div>
         </div>
 
@@ -213,8 +235,8 @@ export default function Admin() {
                   />
                 </div>
               </div>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={addDevBuyMutation.isPending}
                 data-testid="button-add-dev-buy"
               >
@@ -246,11 +268,14 @@ export default function Admin() {
                             {new Date(buy.timestamp).toLocaleString()}
                           </span>
                           {buy.label && (
-                            <Badge variant="outline" className="ml-2">{buy.label}</Badge>
+                            <Badge variant="outline" className="ml-2">
+                              {buy.label}
+                            </Badge>
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {parseFloat(buy.amount).toLocaleString()} tokens @ ${parseFloat(buy.price).toFixed(8)}
+                          {parseFloat(buy.amount).toLocaleString()} tokens @ $
+                          {parseFloat(buy.price).toFixed(8)}
                         </div>
                       </div>
                       <Button
@@ -276,16 +301,16 @@ export default function Admin() {
               <Settings className="h-5 w-5" />
               Admin Features
             </CardTitle>
-            <CardDescription>
-              Platform management tools and moderation capabilities
-            </CardDescription>
+            <CardDescription>Platform management tools and moderation capabilities</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 border rounded-md">
                 <div>
                   <h3 className="font-medium">User Management</h3>
-                  <p className="text-sm text-muted-foreground">View, edit, and moderate user accounts</p>
+                  <p className="text-sm text-muted-foreground">
+                    View, edit, and moderate user accounts
+                  </p>
                 </div>
                 <Badge variant="secondary">Coming Soon</Badge>
               </div>
@@ -299,14 +324,18 @@ export default function Admin() {
               <div className="flex items-center justify-between p-4 border rounded-md">
                 <div>
                   <h3 className="font-medium">NFT Marketplace</h3>
-                  <p className="text-sm text-muted-foreground">Manage NFT listings and transactions</p>
+                  <p className="text-sm text-muted-foreground">
+                    Manage NFT listings and transactions
+                  </p>
                 </div>
                 <Badge variant="secondary">Coming Soon</Badge>
               </div>
               <div className="flex items-center justify-between p-4 border rounded-md">
                 <div>
                   <h3 className="font-medium">Analytics Dashboard</h3>
-                  <p className="text-sm text-muted-foreground">View platform statistics and metrics</p>
+                  <p className="text-sm text-muted-foreground">
+                    View platform statistics and metrics
+                  </p>
                 </div>
                 <Badge variant="secondary">Coming Soon</Badge>
               </div>

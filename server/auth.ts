@@ -5,7 +5,18 @@ import nacl from "tweetnacl";
 import { storage } from "./storage";
 import type { User } from "@shared/schema";
 
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
+const JWT_SECRET = (() => {
+  if (process.env.JWT_SECRET) {
+    return process.env.JWT_SECRET;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET environment variable is required in production");
+  }
+  console.warn(
+    "[Auth] Warning: JWT_SECRET not set, using random value. Sessions will be invalidated on restart."
+  );
+  return crypto.randomBytes(32).toString("hex");
+})();
 const ADMIN_WALLET_ADDRESS = process.env.ADMIN_WALLET_ADDRESS || "";
 const SESSION_DURATION_DAYS = 7;
 
@@ -49,7 +60,7 @@ export function createJWT(payload: Omit<JWTPayload, "iat" | "exp">): string {
   const encodedHeader = base64UrlEncode(JSON.stringify(header));
   const encodedPayload = base64UrlEncode(JSON.stringify(fullPayload));
   const signatureInput = `${encodedHeader}.${encodedPayload}`;
-  
+
   const hmac = crypto.createHmac("sha256", JWT_SECRET);
   hmac.update(signatureInput);
   const signature = hmac.digest("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
@@ -64,15 +75,19 @@ export function verifyJWT(token: string): JWTPayload | null {
 
     const [encodedHeader, encodedPayload, signature] = parts;
     const signatureInput = `${encodedHeader}.${encodedPayload}`;
-    
+
     const hmac = crypto.createHmac("sha256", JWT_SECRET);
     hmac.update(signatureInput);
-    const expectedSignature = hmac.digest("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    const expectedSignature = hmac
+      .digest("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
 
     if (signature !== expectedSignature) return null;
 
     const payload: JWTPayload = JSON.parse(base64UrlDecode(encodedPayload));
-    
+
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;
 
     return payload;
@@ -104,7 +119,7 @@ export function verifyWalletSignature(
     const messageBytes = new TextEncoder().encode(message);
     const signatureBytes = Buffer.from(signature, "base64");
     const publicKeyBytes = Buffer.from(publicKey, "base64");
-    
+
     return nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes);
   } catch {
     return false;
@@ -130,10 +145,8 @@ export async function authMiddleware(
   try {
     const authHeader = req.headers.authorization;
     const cookieToken = req.cookies?.authToken;
-    
-    const token = authHeader?.startsWith("Bearer ") 
-      ? authHeader.slice(7) 
-      : cookieToken;
+
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : cookieToken;
 
     if (!token) {
       res.status(401).json({ error: "Authentication required" });
@@ -179,10 +192,8 @@ export async function optionalAuthMiddleware(
   try {
     const authHeader = req.headers.authorization;
     const cookieToken = req.cookies?.authToken;
-    
-    const token = authHeader?.startsWith("Bearer ") 
-      ? authHeader.slice(7) 
-      : cookieToken;
+
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : cookieToken;
 
     if (token) {
       const payload = verifyJWT(token);

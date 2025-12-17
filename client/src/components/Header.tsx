@@ -9,7 +9,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Terminal, Menu, X, Sun, Moon, Users, Flame, LogIn, LogOut, User, Shield, Settings } from "lucide-react";
+import {
+  Terminal,
+  Menu,
+  X,
+  Sun,
+  Moon,
+  Users,
+  Flame,
+  LogIn,
+  LogOut,
+  User,
+  Shield,
+  Settings,
+} from "lucide-react";
 import { SiTelegram, SiX } from "react-icons/si";
 import { NORMIE_TOKEN } from "@shared/schema";
 import type { TokenMetrics } from "@shared/schema";
@@ -66,8 +79,11 @@ export function Header({ metrics, isDark, onToggleTheme }: HeaderProps) {
           {metrics && (
             <Badge variant="outline" className="hidden sm:flex font-mono text-xs">
               {formatPrice(metrics.price)}
-              <span className={`ml-1 ${metrics.priceChange24h >= 0 ? "text-chart-1" : "text-destructive"}`}>
-                {metrics.priceChange24h >= 0 ? "+" : ""}{metrics.priceChange24h.toFixed(2)}%
+              <span
+                className={`ml-1 ${metrics.priceChange24h >= 0 ? "text-chart-1" : "text-destructive"}`}
+              >
+                {metrics.priceChange24h >= 0 ? "+" : ""}
+                {metrics.priceChange24h.toFixed(2)}%
               </span>
             </Badge>
           )}
@@ -146,23 +162,28 @@ export function Header({ metrics, isDark, onToggleTheme }: HeaderProps) {
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="font-mono gap-2" data-testid="button-user-menu">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="font-mono gap-2"
+                  data-testid="button-user-menu"
+                >
                   {isAdmin && <Shield className="h-3 w-3 text-primary" />}
                   <User className="h-4 w-4" />
-                  <span className="hidden sm:inline max-w-[100px] truncate">
-                    {user?.username}
-                  </span>
+                  <span className="hidden sm:inline max-w-[100px] truncate">{user?.username}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="font-mono">
                 <DropdownMenuItem className="text-muted-foreground text-xs" disabled>
-                  {user?.walletAddress 
+                  {user?.walletAddress
                     ? `${user.walletAddress.slice(0, 4)}...${user.walletAddress.slice(-4)}`
-                    : user?.email
-                  }
+                    : user?.email}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setLocation("/profile")} data-testid="menu-profile">
+                <DropdownMenuItem
+                  onClick={() => setLocation("/profile")}
+                  data-testid="menu-profile"
+                >
                   <Settings className="h-4 w-4 mr-2" />
                   Profile
                 </DropdownMenuItem>
@@ -214,13 +235,17 @@ export function Header({ metrics, isDark, onToggleTheme }: HeaderProps) {
                 <span>PRICE: {formatPrice(metrics.price)}</span>
                 <span>MCAP: ${formatNumber(metrics.marketCap)}</span>
                 <span>VOL 24H: ${formatNumber(metrics.volume24h)}</span>
-                <span className="text-destructive">BURNED: {formatNumber(metrics.burnedTokens)}</span>
+                <span className="text-destructive">
+                  BURNED: {formatNumber(metrics.burnedTokens)}
+                </span>
                 <span className="text-chart-2">LOCKED: {formatNumber(metrics.lockedTokens)}</span>
                 <span>HOLDERS: {formatNumber(metrics.holders)}</span>
                 <span>PRICE: {formatPrice(metrics.price)}</span>
                 <span>MCAP: ${formatNumber(metrics.marketCap)}</span>
                 <span>VOL 24H: ${formatNumber(metrics.volume24h)}</span>
-                <span className="text-destructive">BURNED: {formatNumber(metrics.burnedTokens)}</span>
+                <span className="text-destructive">
+                  BURNED: {formatNumber(metrics.burnedTokens)}
+                </span>
                 <span className="text-chart-2">LOCKED: {formatNumber(metrics.lockedTokens)}</span>
                 <span>HOLDERS: {formatNumber(metrics.holders)}</span>
               </>

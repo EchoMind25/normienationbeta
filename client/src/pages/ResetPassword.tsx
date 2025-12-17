@@ -11,16 +11,18 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, Eye, EyeOff, Loader2, KeyRound, CheckCircle, AlertCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
-const resetPasswordSchema = z.object({
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Must include lowercase, uppercase, and number"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Must include lowercase, uppercase, and number"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
 
@@ -50,23 +52,26 @@ export default function ResetPassword() {
 
   const handleSubmit = async (data: ResetPasswordData) => {
     if (!token) return;
-    
+
     setIsLoading(true);
     try {
-      const response = await apiRequest("/api/auth/reset-password", {
-        method: "POST",
-        body: JSON.stringify({ token, password: data.password }),
+      const response = await apiRequest("POST", "/api/auth/reset-password", {
+        token,
+        password: data.password,
       });
-      
+
       if (response.ok) {
         setIsSuccess(true);
-        toast({ title: "Password Reset", description: "Your password has been reset successfully." });
+        toast({
+          title: "Password Reset",
+          description: "Your password has been reset successfully.",
+        });
       } else {
         const error = await response.json();
-        toast({ 
-          title: "Reset Failed", 
-          description: error.error || "Invalid or expired reset token", 
-          variant: "destructive" 
+        toast({
+          title: "Reset Failed",
+          description: error.error || "Invalid or expired reset token",
+          variant: "destructive",
         });
         setTokenError(true);
       }
@@ -91,8 +96,8 @@ export default function ResetPassword() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              className="w-full font-mono" 
+            <Button
+              className="w-full font-mono"
               onClick={() => setLocation("/")}
               data-testid="button-go-home"
             >
@@ -118,8 +123,8 @@ export default function ResetPassword() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              className="w-full font-mono" 
+            <Button
+              className="w-full font-mono"
               onClick={() => setLocation("/")}
               data-testid="button-go-home-error"
             >
@@ -139,14 +144,14 @@ export default function ResetPassword() {
             <KeyRound className="w-6 h-6 text-primary" />
           </div>
           <CardTitle className="font-mono text-xl">Reset Your Password</CardTitle>
-          <CardDescription>
-            Enter a new password for your Normie Nation account.
-          </CardDescription>
+          <CardDescription>Enter a new password for your Normie Nation account.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password" className="font-mono text-sm">New Password</Label>
+              <Label htmlFor="password" className="font-mono text-sm">
+                New Password
+              </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -171,7 +176,9 @@ export default function ResetPassword() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="font-mono text-sm">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="font-mono text-sm">
+                Confirm Password
+              </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -184,7 +191,9 @@ export default function ResetPassword() {
                 />
               </div>
               {form.formState.errors.confirmPassword && (
-                <p className="text-xs text-destructive">{form.formState.errors.confirmPassword.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.confirmPassword.message}
+                </p>
               )}
             </div>
 
@@ -198,9 +207,9 @@ export default function ResetPassword() {
               </ul>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full font-mono" 
+            <Button
+              type="submit"
+              className="w-full font-mono"
               disabled={isLoading}
               data-testid="button-reset-password"
             >

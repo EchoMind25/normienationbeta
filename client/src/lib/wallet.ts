@@ -46,9 +46,7 @@ export async function connectWallet(provider: WalletProvider): Promise<string | 
   const wallet = getWallet(provider);
   if (!wallet) {
     window.open(
-      provider === "phantom" 
-        ? "https://phantom.app/" 
-        : "https://solflare.com/",
+      provider === "phantom" ? "https://phantom.app/" : "https://solflare.com/",
       "_blank"
     );
     return null;
@@ -87,9 +85,10 @@ export async function signMessage(
   try {
     const messageBytes = new TextEncoder().encode(message);
     let signature: Uint8Array;
-    
-    if (provider === "phantom" && wallet.request) {
-      const response = await wallet.request({
+
+    // Use request method for Phantom if available, otherwise use standard signMessage
+    if (provider === "phantom" && window.solana?.request) {
+      const response = await window.solana.request({
         method: "signMessage",
         params: {
           message: messageBytes,
@@ -101,7 +100,7 @@ export async function signMessage(
       const result = await wallet.signMessage(messageBytes, "utf8");
       signature = result.signature;
     }
-    
+
     return {
       signature: Buffer.from(signature).toString("base64"),
       publicKey: Buffer.from(wallet.publicKey.toBytes()).toString("base64"),

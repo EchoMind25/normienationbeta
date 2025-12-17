@@ -36,7 +36,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: userData, isLoading, refetch } = useQuery({
+  const {
+    data: userData,
+    isLoading,
+    refetch,
+  } = useQuery<{ user: User } | null>({
     queryKey: ["/api/auth/me"],
     retry: false,
     staleTime: 5 * 60 * 1000,
@@ -50,64 +54,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [userData]);
 
-  const loginWithWallet = useCallback(async (provider: WalletProvider): Promise<boolean> => {
-    try {
-      const result = await authenticateWithWallet(provider);
-      if (result?.user) {
-        setUser(result.user);
-        await refetch();
-        toast({ title: "Connected!", description: `Welcome, ${result.user.username}` });
-        return true;
+  const loginWithWallet = useCallback(
+    async (provider: WalletProvider): Promise<boolean> => {
+      try {
+        const result = await authenticateWithWallet(provider);
+        if (result?.user) {
+          setUser(result.user);
+          await refetch();
+          toast({ title: "Connected!", description: `Welcome, ${result.user.username}` });
+          return true;
+        }
+        toast({
+          title: "Connection failed",
+          description: "Could not authenticate with wallet",
+          variant: "destructive",
+        });
+        return false;
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Wallet authentication failed",
+          variant: "destructive",
+        });
+        return false;
       }
-      toast({ title: "Connection failed", description: "Could not authenticate with wallet", variant: "destructive" });
-      return false;
-    } catch (error) {
-      toast({ title: "Error", description: "Wallet authentication failed", variant: "destructive" });
-      return false;
-    }
-  }, [refetch, toast]);
+    },
+    [refetch, toast]
+  );
 
-  const loginWithEmail = useCallback(async (email: string, password: string): Promise<boolean> => {
-    try {
-      const res = await apiRequest("POST", "/api/auth/login", { email, password });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-        await refetch();
-        toast({ title: "Welcome back!", description: `Logged in as ${data.user.username}` });
-        return true;
+  const loginWithEmail = useCallback(
+    async (email: string, password: string): Promise<boolean> => {
+      try {
+        const res = await apiRequest("POST", "/api/auth/login", { email, password });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+          await refetch();
+          toast({ title: "Welcome back!", description: `Logged in as ${data.user.username}` });
+          return true;
+        }
+        const error = await res.json();
+        toast({
+          title: "Login failed",
+          description: error.error || "Invalid credentials",
+          variant: "destructive",
+        });
+        return false;
+      } catch (error) {
+        toast({ title: "Error", description: "Login failed", variant: "destructive" });
+        return false;
       }
-      const error = await res.json();
-      toast({ title: "Login failed", description: error.error || "Invalid credentials", variant: "destructive" });
-      return false;
-    } catch (error) {
-      toast({ title: "Error", description: "Login failed", variant: "destructive" });
-      return false;
-    }
-  }, [refetch, toast]);
+    },
+    [refetch, toast]
+  );
 
-  const register = useCallback(async (email: string, password: string, username: string): Promise<boolean> => {
-    try {
-      const res = await apiRequest("POST", "/api/auth/register", { email, password, username });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-        await refetch();
-        toast({ title: "Account created!", description: `Welcome to Normie Nation, ${data.user.username}` });
-        return true;
+  const register = useCallback(
+    async (email: string, password: string, username: string): Promise<boolean> => {
+      try {
+        const res = await apiRequest("POST", "/api/auth/register", { email, password, username });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+          await refetch();
+          toast({
+            title: "Account created!",
+            description: `Welcome to Normie Nation, ${data.user.username}`,
+          });
+          return true;
+        }
+        const error = await res.json();
+        toast({
+          title: "Registration failed",
+          description: error.error || error.errors?.[0]?.msg || "Could not create account",
+          variant: "destructive",
+        });
+        return false;
+      } catch (error) {
+        toast({ title: "Error", description: "Registration failed", variant: "destructive" });
+        return false;
       }
-      const error = await res.json();
-      toast({ 
-        title: "Registration failed", 
-        description: error.error || error.errors?.[0]?.msg || "Could not create account", 
-        variant: "destructive" 
-      });
-      return false;
-    } catch (error) {
-      toast({ title: "Error", description: "Registration failed", variant: "destructive" });
-      return false;
-    }
-  }, [refetch, toast]);
+    },
+    [refetch, toast]
+  );
 
   const logout = useCallback(async (): Promise<void> => {
     try {
@@ -124,35 +152,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, queryClient, toast]);
 
-  const requestPasswordReset = useCallback(async (email: string): Promise<boolean> => {
-    try {
-      const res = await apiRequest("POST", "/api/auth/request-reset", { email });
-      if (res.ok) {
-        toast({ title: "Check your email", description: "Password reset instructions sent" });
-        return true;
+  const requestPasswordReset = useCallback(
+    async (email: string): Promise<boolean> => {
+      try {
+        const res = await apiRequest("POST", "/api/auth/request-reset", { email });
+        if (res.ok) {
+          toast({ title: "Check your email", description: "Password reset instructions sent" });
+          return true;
+        }
+        return false;
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Could not send reset email",
+          variant: "destructive",
+        });
+        return false;
       }
-      return false;
-    } catch (error) {
-      toast({ title: "Error", description: "Could not send reset email", variant: "destructive" });
-      return false;
-    }
-  }, [toast]);
+    },
+    [toast]
+  );
 
-  const resetPassword = useCallback(async (token: string, password: string): Promise<boolean> => {
-    try {
-      const res = await apiRequest("POST", "/api/auth/reset-password", { token, password });
-      if (res.ok) {
-        toast({ title: "Password reset!", description: "You can now log in with your new password" });
-        return true;
+  const resetPassword = useCallback(
+    async (token: string, password: string): Promise<boolean> => {
+      try {
+        const res = await apiRequest("POST", "/api/auth/reset-password", { token, password });
+        if (res.ok) {
+          toast({
+            title: "Password reset!",
+            description: "You can now log in with your new password",
+          });
+          return true;
+        }
+        const error = await res.json();
+        toast({
+          title: "Reset failed",
+          description: error.error || "Invalid or expired token",
+          variant: "destructive",
+        });
+        return false;
+      } catch (error) {
+        toast({ title: "Error", description: "Password reset failed", variant: "destructive" });
+        return false;
       }
-      const error = await res.json();
-      toast({ title: "Reset failed", description: error.error || "Invalid or expired token", variant: "destructive" });
-      return false;
-    } catch (error) {
-      toast({ title: "Error", description: "Password reset failed", variant: "destructive" });
-      return false;
-    }
-  }, [toast]);
+    },
+    [toast]
+  );
 
   const value: AuthContextType = {
     user,

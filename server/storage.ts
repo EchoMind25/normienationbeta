@@ -64,64 +64,64 @@ export interface IStorage {
   updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined>;
   banUser(id: string): Promise<void>;
   unbanUser(id: string): Promise<void>;
-  
+
   // Sessions
   createSession(session: InsertSession): Promise<Session>;
   getSessionByToken(token: string): Promise<Session | undefined>;
   deleteSession(id: string): Promise<void>;
   deleteUserSessions(userId: string): Promise<void>;
-  
+
   // Password Reset
   createPasswordResetToken(data: InsertPasswordResetToken): Promise<PasswordResetToken>;
   getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
   markPasswordResetTokenUsed(id: string): Promise<void>;
-  
+
   // Auth Challenges (for wallet signature verification)
   createAuthChallenge(data: InsertAuthChallenge): Promise<AuthChallenge>;
   getAuthChallenge(walletAddress: string, challenge: string): Promise<AuthChallenge | undefined>;
   markAuthChallengeUsed(id: string): Promise<void>;
-  
+
   // Icons
   getActiveIcons(): Promise<Icon[]>;
   createIcon(icon: InsertIcon): Promise<Icon>;
-  
+
   // NFTs
   createNft(nft: InsertNft): Promise<Nft>;
   getNft(id: string): Promise<Nft | undefined>;
   getNftsByOwner(ownerId: string): Promise<Nft[]>;
   getListedNfts(): Promise<Nft[]>;
   updateNft(id: string, data: Partial<InsertNft>): Promise<Nft | undefined>;
-  
+
   // NFT Transactions
   createNftTransaction(tx: InsertNftTransaction): Promise<NftTransaction>;
-  
+
   // Chat Rooms
   createChatRoom(room: InsertChatRoom): Promise<ChatRoom>;
   getChatRoom(id: string): Promise<ChatRoom | undefined>;
   getPublicChatRooms(): Promise<ChatRoom[]>;
-  
+
   // Chat Messages
   createChatMessage(msg: InsertChatMessage): Promise<ChatMessage>;
   getChatMessages(roomId: string, limit?: number): Promise<ChatMessage[]>;
   markMessageDeleted(id: string): Promise<void>;
-  
+
   // Chat Room Members
   addChatRoomMember(member: InsertChatRoomMember): Promise<ChatRoomMember>;
   removeChatRoomMember(roomId: string, userId: string): Promise<void>;
   getChatRoomMembers(roomId: string): Promise<ChatRoomMember[]>;
   isRoomMember(roomId: string, userId: string): Promise<boolean>;
-  
+
   // Polls
   getActivePolls(): Promise<Array<PollDb & { options: PollOption[] }>>;
   getPoll(id: string): Promise<(PollDb & { options: PollOption[] }) | undefined>;
   createPoll(poll: InsertPollDb, options: string[]): Promise<PollDb>;
   hasVoted(pollId: string, visitorId: string): Promise<boolean>;
   vote(pollId: string, optionId: string, visitorId: string): Promise<void>;
-  
+
   // Activity Feed
   getRecentActivity(limit?: number): Promise<ActivityItemDb[]>;
   createActivityItem(item: InsertActivityItemDb): Promise<ActivityItemDb>;
-  
+
   // Gallery
   getApprovedGalleryItems(limit?: number): Promise<GalleryItem[]>;
   getPendingGalleryItems(): Promise<GalleryItem[]>;
@@ -236,7 +236,10 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getAuthChallenge(walletAddress: string, challenge: string): Promise<AuthChallenge | undefined> {
+  async getAuthChallenge(
+    walletAddress: string,
+    challenge: string
+  ): Promise<AuthChallenge | undefined> {
     const [authChallenge] = await db
       .select()
       .from(authChallenges)
@@ -342,10 +345,10 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async removeChatRoomMember(roomId: string, oduserId: string): Promise<void> {
+  async removeChatRoomMember(roomId: string, userId: string): Promise<void> {
     await db
       .delete(chatRoomMembers)
-      .where(and(eq(chatRoomMembers.roomId, roomId), eq(chatRoomMembers.userId, oduserId)));
+      .where(and(eq(chatRoomMembers.roomId, roomId), eq(chatRoomMembers.userId, userId)));
   }
 
   async getChatRoomMembers(roomId: string): Promise<ChatRoomMember[]> {
@@ -367,39 +370,33 @@ export class DatabaseStorage implements IStorage {
       .from(polls)
       .where(eq(polls.isActive, true))
       .orderBy(desc(polls.createdAt));
-    
+
     const pollsWithOptions = await Promise.all(
       activePollsList.map(async (poll) => {
-        const options = await db
-          .select()
-          .from(pollOptions)
-          .where(eq(pollOptions.pollId, poll.id));
+        const options = await db.select().from(pollOptions).where(eq(pollOptions.pollId, poll.id));
         return { ...poll, options };
       })
     );
-    
+
     return pollsWithOptions;
   }
 
   async getPoll(id: string): Promise<(PollDb & { options: PollOption[] }) | undefined> {
     const [poll] = await db.select().from(polls).where(eq(polls.id, id));
     if (!poll) return undefined;
-    
-    const options = await db
-      .select()
-      .from(pollOptions)
-      .where(eq(pollOptions.pollId, id));
-    
+
+    const options = await db.select().from(pollOptions).where(eq(pollOptions.pollId, id));
+
     return { ...poll, options };
   }
 
   async createPoll(poll: InsertPollDb, optionTexts: string[]): Promise<PollDb> {
     const [created] = await db.insert(polls).values(poll).returning();
-    
+
     for (const text of optionTexts) {
       await db.insert(pollOptions).values({ pollId: created.id, text });
     }
-    
+
     return created;
   }
 
@@ -421,11 +418,7 @@ export class DatabaseStorage implements IStorage {
 
   // Activity Feed
   async getRecentActivity(limit: number = 20): Promise<ActivityItemDb[]> {
-    return db
-      .select()
-      .from(activityItems)
-      .orderBy(desc(activityItems.createdAt))
-      .limit(limit);
+    return db.select().from(activityItems).orderBy(desc(activityItems.createdAt)).limit(limit);
   }
 
   async createActivityItem(item: InsertActivityItemDb): Promise<ActivityItemDb> {
@@ -469,7 +462,10 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async updateGalleryItem(id: string, data: Partial<InsertGalleryItem>): Promise<GalleryItem | undefined> {
+  async updateGalleryItem(
+    id: string,
+    data: Partial<InsertGalleryItem>
+  ): Promise<GalleryItem | undefined> {
     const [updated] = await db
       .update(galleryItems)
       .set(data)
@@ -500,30 +496,45 @@ export class DatabaseStorage implements IStorage {
 
   async voteGalleryItem(itemId: string, visitorId: string, voteType: "up" | "down"): Promise<void> {
     const existingVote = await this.hasGalleryVoted(itemId, visitorId);
-    
+
     if (existingVote) {
       if (existingVote.voteType === voteType) {
         return;
       }
       await db.delete(galleryVotes).where(eq(galleryVotes.id, existingVote.id));
       if (existingVote.voteType === "up") {
-        await db.update(galleryItems).set({ upvotes: sql`${galleryItems.upvotes} - 1` }).where(eq(galleryItems.id, itemId));
+        await db
+          .update(galleryItems)
+          .set({ upvotes: sql`${galleryItems.upvotes} - 1` })
+          .where(eq(galleryItems.id, itemId));
       } else {
-        await db.update(galleryItems).set({ downvotes: sql`${galleryItems.downvotes} - 1` }).where(eq(galleryItems.id, itemId));
+        await db
+          .update(galleryItems)
+          .set({ downvotes: sql`${galleryItems.downvotes} - 1` })
+          .where(eq(galleryItems.id, itemId));
       }
     }
-    
+
     await db.insert(galleryVotes).values({ galleryItemId: itemId, visitorId, voteType });
-    
+
     if (voteType === "up") {
-      await db.update(galleryItems).set({ upvotes: sql`${galleryItems.upvotes} + 1` }).where(eq(galleryItems.id, itemId));
+      await db
+        .update(galleryItems)
+        .set({ upvotes: sql`${galleryItems.upvotes} + 1` })
+        .where(eq(galleryItems.id, itemId));
     } else {
-      await db.update(galleryItems).set({ downvotes: sql`${galleryItems.downvotes} + 1` }).where(eq(galleryItems.id, itemId));
+      await db
+        .update(galleryItems)
+        .set({ downvotes: sql`${galleryItems.downvotes} + 1` })
+        .where(eq(galleryItems.id, itemId));
     }
   }
 
   async incrementGalleryViews(id: string): Promise<void> {
-    await db.update(galleryItems).set({ views: sql`${galleryItems.views} + 1` }).where(eq(galleryItems.id, id));
+    await db
+      .update(galleryItems)
+      .set({ views: sql`${galleryItems.views} + 1` })
+      .where(eq(galleryItems.id, id));
   }
 
   async getGalleryComments(itemId: string): Promise<GalleryComment[]> {

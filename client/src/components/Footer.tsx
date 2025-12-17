@@ -28,9 +28,7 @@ export function Footer() {
               <Terminal className="h-6 w-6 text-primary" />
               <span className="font-mono text-lg font-bold">{NORMIE_TOKEN.symbol}</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {NORMIE_TOKEN.description}
-            </p>
+            <p className="text-sm text-muted-foreground">{NORMIE_TOKEN.description}</p>
             <div className="flex items-center gap-2">
               <a
                 href={`https://t.me/${NORMIE_TOKEN.telegram.replace("@", "")}`}
